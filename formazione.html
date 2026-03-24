@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formazione</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Portale Gestione Interna</p>
+        <h1>Modulo Formazione</h1>
+      </div>
+      <div class="topbar-actions">
+        <a class="ghost-link" href="index.html">← Torna alla home</a>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Dati iniziali</h2>
+          <p>Compila i dati della formazione e assegna i punti per ogni argomento trattato.</p>
+        </div>
+
+        <div class="panel-body">
+          <div class="form-grid cols-2">
+            <label>
+              Data
+              <input type="date" id="trainingDate" />
+            </label>
+
+            <label>
+              Orario inizio Formazione
+              <input type="time" id="trainingStartTime" />
+            </label>
+
+            <label>
+              Orario fine Formazione
+              <input type="time" id="trainingEndTime" />
+            </label>
+
+            <label>
+              Supervisionato da (Istruttore/Gestore)
+              <input type="text" id="trainingSupervisorId" placeholder="Es. 123456789012345678" />
+            </label>
+          </div>
+
+          <div class="form-grid" style="margin-top: 14px;">
+            <label>
+              Nome cittadini partecipanti
+              <textarea id="trainingParticipants" placeholder="Inserisci uno o più nomi, separati da virgola o andando a capo"></textarea>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel sticky-panel">
+        <div class="panel-header">
+          <h2>Riepilogo live</h2>
+          <p>Totale punti assegnati durante la formazione.</p>
+        </div>
+
+        <div class="panel-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span>Punti ottenuti</span>
+              <strong id="trainingEarnedPoints">0</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Punti massimi</span>
+              <strong id="trainingMaxPoints">0</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Percentuale</span>
+              <strong id="trainingPercentageValue">0%</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Relatori</span>
+              <strong>&lt;@1084580275582931044&gt;</strong>
+            </div>
+          </div>
+
+          <div class="side-actions">
+            <button id="copyTrainingSummaryBtn" class="btn btn-primary" type="button">Copia modulo finale</button>
+            <button id="resetTrainingBtn" class="btn btn-danger" type="button">Reset formazione</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Istruzioni operative</h2>
+      </div>
+
+      <div class="panel-body">
+        <div class="rules-box">
+          <ul class="rules-list">
+            <li>Ogni volta che si effettua una formazione, andrà segnato tutto sul canale <strong>#rapporto-formazione</strong> compilando gli appositi campi.</li>
+            <li>Per qualsiasi domanda è possibile chiedere nel canale apposito.</li>
+            <li><strong>La prima formazione non va effettuata da soli</strong> — è obbligatorio attendere un altro formatore.</li>
+            <li>Non appena terminata la formazione, andranno compilate le schedature di ciascun candidato seguendo il modulo <strong>#modulo-schedature</strong> e andranno pubblicate nel canale <strong>#schedature</strong>.</li>
+          </ul>
+
+          <div class="rules-highlight">
+            La formazione verrà avviata solo quando un candidato avrà visto tutti i video di formazione
+            (VIDEO-FORMAZ-1, VIDEO-FORMAZ-2, VIDEO-FORMAZ-3) e avrà messo la reazione apposita.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Norme di pubblicazione</h2>
+      </div>
+
+      <div class="panel-body">
+        <div class="rules-box">
+          <ul class="rules-list">
+            <li>Quando si inviano le schedature, è obbligatorio pubblicarle utilizzando la scritta in basso <strong>"pubblica"</strong> non appena si invia il messaggio.</li>
+            <li>In alternativa è possibile utilizzare il megafono posizionato in alto a destra del messaggio.</li>
+            <li>Le schedature non pubblicate non saranno considerate valide.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Argomenti obbligatori</h2>
+        <p>Assegna un punteggio per ogni argomento trattato durante la formazione.</p>
+      </div>
+
+      <div class="panel-body">
+        <div id="trainingQuestionsContainer" class="questions-wrapper"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Modulo finale generato</h2>
+        <p>Testo pronto da copiare e incollare.</p>
+      </div>
+
+      <div class="panel-body">
+        <textarea id="trainingFinalSummary" class="summary-box" readonly></textarea>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
