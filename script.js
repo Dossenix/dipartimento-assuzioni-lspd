@@ -414,35 +414,31 @@ function evaluateColloquioResult(percentage) {
     return { label: "Positivo", isPassed: true };
   }
 
-  if (percentage >= 60 && percentage <= 65) {
+  if (percentage >= 60) {
     return { label: "Negativo - rimandato di 30 minuti", isPassed: false };
   }
 
-  if (percentage >= 50 && percentage <= 55) {
+  if (percentage >= 50) {
     return { label: "Negativo - rimandato di 45 minuti", isPassed: false };
   }
 
-  if (percentage >= 40 && percentage <= 45) {
+  if (percentage >= 40) {
     return { label: "Negativo - rimandato di 50 minuti", isPassed: false };
   }
 
-  if (percentage >= 30 && percentage <= 35) {
+  if (percentage >= 30) {
     return { label: "Negativo - rimandato di 1 ora", isPassed: false };
   }
 
-  if (percentage >= 20 && percentage <= 25) {
+  if (percentage >= 20) {
     return { label: "Negativo - rimandato di 1,5 ore", isPassed: false };
   }
 
-  if (percentage >= 10 && percentage <= 15) {
+  if (percentage >= 10) {
     return { label: "Negativo - rimandato di 2,5 ore", isPassed: false };
   }
 
-  if (percentage >= 0 && percentage <= 5) {
-    return { label: "Negativo - rimandato di 3 ore", isPassed: false };
-  }
-
-  return { label: "Negativo - fascia non definita", isPassed: false };
+  return { label: "Negativo - rimandato di 3 ore", isPassed: false };
 }
 
 function buildColloquioFinalSummary(percentage, resultText) {
@@ -456,7 +452,7 @@ function buildColloquioFinalSummary(percentage, resultText) {
 
   return [
     `Nome e Cognome: ${colloquioDom.candidateName?.value?.trim() || ""}`,
-    `Data di nascita: ${colloquioDom.candidateDob?.value || ""}`,
+    `Data di nascita: ${formatInputDateToIT(colloquioDom.candidateDob?.value || "")}`,
     `Orario Inizio Colloquio: ${colloquioDom.startTime?.value || ""}`,
     `Orario Fine: ${colloquioDom.endTime?.value || ""}`,
     `Giorno Colloquio: ${giornoColloquio}`,
@@ -476,7 +472,7 @@ function copyColloquioSummaryToClipboard() {
     return;
   }
 
-  navigator.clipboard.writeText(text)
+  copyTextToClipboard(text)
     .then(() => alert("Modulo finale copiato negli appunti."))
     .catch(() => alert("Impossibile copiare automaticamente. Copialo manualmente dal riquadro."));
 }
@@ -732,7 +728,7 @@ function copyTrainingSummaryToClipboard() {
     return;
   }
 
-  navigator.clipboard.writeText(text)
+  copyTextToClipboard(text)
     .then(() => alert("Modulo finale copiato negli appunti."))
     .catch(() => alert("Impossibile copiare automaticamente. Copialo manualmente dal riquadro."));
 }
@@ -831,5 +827,33 @@ function formatDateIT(date) {
 function formatInputDateToIT(value) {
   if (!value) return "";
   const [yyyy, mm, dd] = value.split("-");
+  if (!yyyy || !mm || !dd) return value;
   return `${dd}/${mm}/${yyyy}`;
+}
+
+function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    textarea.style.left = "-9999px";
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      const copied = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      copied ? resolve() : reject(new Error("Copy command was not accepted."));
+    } catch (error) {
+      document.body.removeChild(textarea);
+      reject(error);
+    }
+  });
 }
