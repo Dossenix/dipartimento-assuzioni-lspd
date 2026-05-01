@@ -3,53 +3,64 @@ const FORMAZIONE_STORAGE_KEY = "formazione_form_state_v1";
 
 const questionsData = [
   {
-    section: "Azioni Illegali",
+    section: "Pre-check idoneità",
     questions: [
       {
         id: "q1",
-        title: "Durante il rapimento di un alto comando FDO, quanti agenti e criminali possono intervenire?",
-        maxPoints: 5,
+        maxPoints: 6,
+        title: "Verifica iniziale: fedina penale pulita e porto d'armi valido.",
+        answer: "Prima di iniziare il colloquio bisogna controllare fedina penale e porto d'armi. Se uno dei due controlli non è valido, il candidato è non idoneo e il colloquio può essere interrotto."
+      }
+    ]
+  },
+  {
+    section: "Azioni illegali - DA SAPERE",
+    questions: [
+      {
+        id: "q2",
+        maxPoints: 6,
+        title: "Rapimento alto comando FDO: numeri di agenti e criminali.",
         answer: "Alto comando: nessun limite di agenti. Criminali: massimo 15."
       },
       {
-        id: "q2",
-        title: "Durante il rapimento di un agente non alto comando, quanti agenti e criminali possono intervenire?",
+        id: "q3",
         maxPoints: 5,
+        title: "Rapimento agente non alto comando: numeri di agenti e criminali.",
         answer: "Agente non alto comando: massimo 20 agenti. Criminali: massimo 15."
       },
       {
-        id: "q3",
-        title: "Qual è il tempo massimo di intervento in un 10-101 e quanti agenti e criminali possono partecipare?",
-        maxPoints: 6,
+        id: "q4",
+        maxPoints: 5,
+        title: "10-101: tempo di intervento, numeri e limiti dell'azione.",
         answer: "Nel 10-101 non c'è un tempo massimo di intervento. Possono intervenire massimo 20 agenti e massimo 15 criminali."
       }
     ]
   },
   {
-    section: "Azioni Freeroam",
+    section: "Azione freeroam - DA SAPERE",
     questions: [
       {
-        id: "q4",
-        title: "Durante una freeroam possono essere presenti ostaggi?",
-        maxPoints: 2,
-        answer: "No, durante una freeroam non possono essere presenti ostaggi."
-      },
-      {
         id: "q5",
-        title: "Qual è il numero massimo di agenti ammessi in un'azione freeroam?",
-        maxPoints: 3,
-        answer: "Massimo 10 agenti."
+        maxPoints: 4,
+        title: "Freeroam: numeri massimi e gestione dei partecipanti.",
+        answer: "Il candidato deve conoscere i numeri previsti dal regolamento. Riferimento attuale: massimo 10 agenti."
       },
       {
         id: "q6",
-        title: "È consentito utilizzare i tetti nelle azioni freeroam?",
-        maxPoints: 2,
-        answer: "No, i tetti non sono consentiti, a meno che siano raggiungibili fisicamente tramite scale o scale a pioli."
+        maxPoints: 3,
+        title: "Freeroam: gli ostaggi sono consentiti?",
+        answer: "No, durante una freeroam non possono essere presenti ostaggi."
       },
       {
         id: "q7",
-        title: "Quali armi sono autorizzate nelle azioni freeroam?",
-        maxPoints: 3,
+        maxPoints: 4,
+        title: "Freeroam: uso dei tetti e posizionamenti consentiti.",
+        answer: "I tetti non sono consentiti, a meno che siano raggiungibili fisicamente tramite scale o scale a pioli."
+      },
+      {
+        id: "q8",
+        maxPoints: 4,
+        title: "Freeroam: armi autorizzate.",
         answer: "Solo pistole a colpo singolo e giubbotti."
       }
     ]
@@ -58,125 +69,84 @@ const questionsData = [
     section: "Rapine",
     questions: [
       {
-        id: "q8",
-        title: "Con quanti agenti può essere avviata una rapina Fleeca?",
-        maxPoints: 3,
-        answer: "Fleeca: può essere avviata fino a 4 agenti."
-      },
-      {
         id: "q9",
-        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Fleeca?",
         maxPoints: 4,
-        answer: "Agenti: 4. Criminali: minimo 2, massimo 4."
+        title: "Rapina Market: numeri, ostaggi e armi consentite.",
+        answer: "Market / Negozietto: agenti 2. Criminali massimo 2. Ostaggi 1. Armi: pistole a colpo singolo e giubbotti."
       },
       {
         id: "q10",
-        title: "Quali sono i limiti massimi di agenti e criminali in una rapina al Market?",
         maxPoints: 4,
-        answer: "Market / Negozietto: agenti 2. Criminali massimo 2. Ostaggi 1."
+        title: "Rapina Gabriella: numeri, ostaggi e armi consentite.",
+        answer: "Gabriella: agenti 3. Criminali massimo 3. Ostaggi 1. Armi: pistole a colpo singolo e giubbotti."
       },
       {
         id: "q11",
-        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Gabriella?",
         maxPoints: 4,
-        answer: "Gabriella: agenti 3. Criminali massimo 3. Ostaggi 1."
+        title: "Rapina Fleeca: numeri, caschi e armi consentite.",
+        answer: "Fleeca: agenti 4. Criminali minimo 2, massimo 4. Sono consentiti caschetti, giubbotti, pistole a colpo singolo e P90."
       },
       {
         id: "q12",
-        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Pacific?",
         maxPoints: 5,
-        answer: "Pacific: agenti 12. Criminali minimo 6, massimo 10. Ostaggi 4."
-      },
+        title: "Rapina Pacific: numeri, ostaggi, caschi e armi consentite.",
+        answer: "Pacific: agenti 12. Criminali minimo 6, massimo 10. Ostaggi 4. Sono consentiti caschetti, giubbotti e qualunque arma in dotazione."
+      }
+    ]
+  },
+  {
+    section: "Codici radio e status",
+    questions: [
       {
         id: "q13",
-        title: "Si possono utilizzare i caschi durante una rapina Fleeca?",
-        maxPoints: 2,
-        answer: "Sì, i caschetti sono consentiti."
+        maxPoints: 9,
+        title: "Elenca i principali codici radio e il loro significato.",
+        answer: "Codici principali: 10-0 = Muto radio; 10-2 = Ricevuto male; 10-3 = Stop trasmissioni; 10-4 = Ricevuto; 10-5 = Ultimo messaggio; 10-7 = Fuori servizio; 10-8 = In servizio; 10-15 = Trasporto detenuto; 10-17 = Test sul veicolo; 10-19 = Disponibile in centrale; 10-20 = Posizione; 10-25 = Pericolo / urgenza; 10-40 = Ufficiale deceduto; 10-48 = Convergenza immediata; 10-50 = Incidente; 10-55 = Disturbo veicolare; 10-60 = Alterazione del traffico; 10-66 = Posto di blocco; 10-80 = Inseguimento; 10-99 = Ricercato; 10-100 = Richiesta rinforzi; 10-101 = Assalto alla centrale."
       },
       {
         id: "q14",
-        title: "È consentito utilizzare i tetti durante una rapina al Market?",
-        maxPoints: 2,
-        answer: "No, non si possono usare i tetti vicini."
-      },
-      {
-        id: "q15",
-        title: "Quali armi sono concesse durante una rapina Fleeca?",
-        maxPoints: 3,
-        answer: "Pistole a colpo singolo, P90, caschetti e giubbotti."
-      },
-      {
-        id: "q16",
-        title: "Quali armi sono concesse durante una rapina al Market?",
-        maxPoints: 3,
-        answer: "Pistole a colpo singolo e giubbotti."
-      },
-      {
-        id: "q17",
-        title: "Quali armi sono concesse durante una rapina Gabriella?",
-        maxPoints: 3,
-        answer: "Pistole a colpo singolo e giubbotti."
-      },
-      {
-        id: "q18",
-        title: "Quali armi sono concesse durante una rapina Pacific?",
-        maxPoints: 4,
-        answer: "Qualunque arma in dotazione, caschetti e giubbotti."
-      }
-    ]
-  },
-  {
-    section: "Codici Radio",
-    questions: [
-      {
-        id: "q19",
-        title: "Elenca i principali codici radio e il loro significato.",
-        maxPoints: 7,
-        answer: "Codici principali: 10-0 = Muto radio; 10-2 = Ricevuto male; 10-3 = Stop trasmissioni; 10-4 = Ricevuto; 10-5 = Ultimo messaggio; 10-7 = Fuori servizio; 10-8 = In servizio; 10-15 = Trasporto detenuto; 10-17 = Test sul veicolo; 10-19 = Disponibile in centrale; 10-20 = Posizione; 10-25 = Pericolo / urgenza; 10-40 = Ufficiale deceduto; 10-48 = Convergenza immediata; 10-50 = Incidente; 10-55 = Disturbo veicolare; 10-60 = Alterazione del traffico; 10-66 = Posto di blocco; 10-80 = Inseguimento; 10-99 = Ricercato; 10-100 = Richiesta rinforzi; 10-101 = Assalto alla centrale."
-      }
-    ]
-  },
-  {
-    section: "Status",
-    questions: [
-      {
-        id: "q20",
-        title: "Elenca i codici status e il loro significato.",
-        maxPoints: 6,
+        maxPoints: 5,
+        title: "Elenca i codici status e quando usarli.",
         answer: "Status 1 = pattuglia disponibile per direttive. Status 2 = pattuglia non disponibile per direttive. Status 3 = pattuglia in rifornimento / pausa cibo / riparazione veicolo."
       }
     ]
   },
   {
-    section: "Miranda Warning",
+    section: "Procedure inseguimenti",
     questions: [
       {
-        id: "q21",
+        id: "q15",
+        maxPoints: 7,
+        title: "Procedura inseguimento: ALT, 10-80, comunicazioni e gomme.",
+        answer: "Base di riferimento: 3 Alt distanziati di 10 secondi, oppure 5 Alt se il soggetto è in moto. Poi 10-80 con comunicazione in radio di posizione e veicolo. Dopo le manovre consentite e nei casi previsti, dopo 3 PIT è possibile aprire il fuoco alle gomme."
+      },
+      {
+        id: "q16",
+        maxPoints: 7,
+        title: "Manovre principali: PIT, BOX, T e DOUBLE T.",
+        answer: "PIT: urto controllato per far perdere stabilità al veicolo. BOX: chiusura del veicolo tra più pattuglie. T: blocco con posizionamento a T. DOUBLE T: doppio blocco coordinato a T."
+      }
+    ]
+  },
+  {
+    section: "Miranda Warning - DA SAPERE",
+    questions: [
+      {
+        id: "q17",
+        maxPoints: 12,
         title: "Recita correttamente il Miranda Warning.",
-        maxPoints: 9,
         answer: "Formula di riferimento: Lei ha il diritto di rimanere in silenzio. Qualsiasi cosa dirà potrà essere usata contro di lei in tribunale. Ha il diritto di parlare con un avvocato e di averlo presente durante l'interrogatorio. Se non può permettersene uno, gliene sarà assegnato uno d'ufficio. Ha compreso i suoi diritti?"
       }
     ]
   },
   {
-    section: "Inseguimento",
+    section: "Valutazione generale",
     questions: [
       {
-        id: "q22",
-        title: "Quali procedure devono essere eseguite durante un inseguimento?",
+        id: "q18",
         maxPoints: 6,
-        answer: "Base di riferimento: 3 Alt distanziati di 10 secondi, oppure 5 Alt se il soggetto è in moto. Poi 10-80 con comunicazione in radio di posizione e veicolo. Si procede con le manovre consentite. Dopo 3 PIT, nei casi previsti, è possibile aprire il fuoco alle gomme."
-      }
-    ]
-  },
-  {
-    section: "Manovre",
-    questions: [
-      {
-        id: "q23",
-        title: "Quali sono le manovre principali e in cosa consistono?",
-        maxPoints: 9,
-        answer: "Le manovre principali sono 4: PIT, BOX, T e DOUBLE T. PIT: urto controllato per far perdere stabilità al veicolo. BOX: chiusura del veicolo tra più pattuglie. T: blocco con posizionamento a T. DOUBLE T: doppio blocco coordinato a T."
+        title: "Ragionamento sulle procedure LSPD e sicurezza operativa.",
+        answer: "Valutare se il candidato ragiona sulle procedure invece di rispondere a caso: deve saper spiegare cosa fare, perché farlo e quando chiedere supporto."
       }
     ]
   }
@@ -184,52 +154,67 @@ const questionsData = [
 
 const trainingQuestionsData = [
   {
-    section: "Argomenti Obbligatori",
+    section: "Test formativo",
     questions: [
       {
         id: "tq1",
-        title: "Compilazione dei moduli arresto, esito rapine e multe.",
-        maxPoints: 5
+        maxPoints: 7,
+        title: "Compilazione moduli arresto, esito rapine e multe.",
+        answer: "Verificare che sappia compilare i moduli con dati completi, reati corretti, prove richieste e importi coerenti. Il modulo arresto è il punto più importante."
       },
       {
         id: "tq2",
-        title: "Utilizzo corretto del canale #info.",
-        maxPoints: 3
+        maxPoints: 3,
+        title: "Utilizzo del canale https://canary.discord.com/channels/959468486504095824/1329182773319307376.",
+        answer: "Deve sapere quando usare il canale, cosa inserire e come evitare messaggi incompleti o fuori posto."
       },
       {
         id: "tq3",
+        maxPoints: 4,
         title: "Spiegazione dei gradi di allerta.",
-        maxPoints: 4
+        answer: "Chiedere cosa sono, quando cambiano e come influenzano comportamento operativo e priorità."
       },
       {
         id: "tq4",
+        maxPoints: 4,
         title: "Costi dei servizi di polizia: documenti e porto d'armi.",
-        maxPoints: 4
+        answer: "Il candidato deve conoscere i costi dei documenti e del porto d'armi, e sapere come comunicarli al cittadino."
       },
       {
         id: "tq5",
+        maxPoints: 4,
         title: "Contenuto della dotazione della polizia.",
-        maxPoints: 4
+        answer: "Verificare cosa riceve una recluta e cosa invece richiede autorizzazione superiore."
       },
       {
         id: "tq6",
+        maxPoints: 6,
         title: "Arresti in game, fatture e utilizzo del tablet.",
-        maxPoints: 7
+        answer: "Deve saper spiegare arresto pratico, fattura, uso tablet e passaggi essenziali in città."
       },
       {
         id: "tq7",
+        maxPoints: 5,
         title: "Differenze tra modulo arresto e modulo richiesta processo.",
-        maxPoints: 5
+        answer: "Deve distinguere quando usare il modulo arresto e quando serve richiesta processo, evitando scambi tra i due."
       },
       {
         id: "tq8",
+        maxPoints: 2,
         title: "Test balistico, soldi sporchi e test sostanze stupefacenti. (Facoltativo)",
-        maxPoints: 3
+        answer: "Argomento facoltativo: utile per capire se sa gestire prove e controlli aggiuntivi."
       },
       {
         id: "tq9",
+        maxPoints: 3,
+        title: "Errori comuni nei moduli arresto, PDA e richieste processo.",
+        answer: "Spiegare e far riconoscere gli errori più comuni: mancanza di GoPro, attribuzione errata dei reati, dati incompleti, importi sbagliati o richiesta processo usata male."
+      },
+      {
+        id: "tq10",
+        maxPoints: 2,
         title: "Domande finali a discrezione del formatore.",
-        maxPoints: 5
+        answer: "Aggiungere domande pratiche o di ragionamento per capire se ha guardato davvero i video e se sa applicare le procedure."
       }
     ]
   }
@@ -262,6 +247,8 @@ const colloquioDom = {
   saveStatus: document.getElementById("colloquioSaveStatus"),
   candidateName: document.getElementById("candidateName"),
   candidateDob: document.getElementById("candidateDob"),
+  criminalRecordCheck: document.getElementById("criminalRecordCheck"),
+  weaponLicenseCheck: document.getElementById("weaponLicenseCheck"),
   startTime: document.getElementById("startTime"),
   endTime: document.getElementById("endTime"),
   discordLink: document.getElementById("discordLink"),
@@ -309,6 +296,8 @@ function attachColloquioListeners() {
   [
     colloquioDom.candidateName,
     colloquioDom.candidateDob,
+    colloquioDom.criminalRecordCheck,
+    colloquioDom.weaponLicenseCheck,
     colloquioDom.startTime,
     colloquioDom.endTime,
     colloquioDom.discordLink,
@@ -354,6 +343,16 @@ function findColloquioQuestionById(id) {
 }
 
 function evaluateColloquioResult(totals) {
+  const precheckStatus = getColloquioPrecheckStatus();
+
+  if (precheckStatus === "failed") {
+    return { label: "Non idoneo - pre-check", status: "negative" };
+  }
+
+  if (precheckStatus === "pending") {
+    return { label: "Pre-check da completare", status: "pending" };
+  }
+
   if (totals.completed === 0) {
     return { label: "Da calcolare", status: "pending" };
   }
@@ -393,11 +392,28 @@ function evaluateColloquioResult(totals) {
   return { label: "Negativo - rimandato di 3 ore", status: "negative" };
 }
 
+function getColloquioPrecheckStatus() {
+  const criminalRecord = getValue(colloquioDom.criminalRecordCheck);
+  const weaponLicense = getValue(colloquioDom.weaponLicenseCheck);
+
+  if (criminalRecord === "not_clean" || weaponLicense === "missing") {
+    return "failed";
+  }
+
+  if (!criminalRecord || !weaponLicense) {
+    return "pending";
+  }
+
+  return "passed";
+}
+
 function describeColloquioMissingFields(totals) {
   const missing = [];
 
   if (!getValue(colloquioDom.candidateName)) missing.push("nome");
   if (!getValue(colloquioDom.candidateDob)) missing.push("data nascita");
+  if (!getValue(colloquioDom.criminalRecordCheck)) missing.push("fedina");
+  if (!getValue(colloquioDom.weaponLicenseCheck)) missing.push("porto d'armi");
   if (!getValue(colloquioDom.startTime)) missing.push("inizio");
   if (!getValue(colloquioDom.endTime)) missing.push("fine");
   if (!getValue(colloquioDom.discordLink)) missing.push("link bando");
@@ -413,16 +429,34 @@ function buildColloquioFinalSummary(totals, resultText) {
   return [
     `Nome e Cognome: ${getValue(colloquioDom.candidateName)}`,
     `Data di nascita: ${formatInputDateToIT(getValue(colloquioDom.candidateDob))}`,
+    `Fedina penale: ${describeColloquioPrecheckValue("criminalRecord", getValue(colloquioDom.criminalRecordCheck))}`,
+    `Porto d'armi: ${describeColloquioPrecheckValue("weaponLicense", getValue(colloquioDom.weaponLicenseCheck))}`,
     `Orario Inizio Colloquio: ${getValue(colloquioDom.startTime)}`,
     `Orario Fine: ${getValue(colloquioDom.endTime)}`,
     `Giorno Colloquio: ${formatDateIT(new Date())}`,
     `Esito Bando: ${getValue(colloquioDom.discordLink)}`,
     `Esito Colloquio: ${resultText}`,
     `Valutazione: ${totals.percentage}%`,
+    `Post esito positivo: inviare Discord LSPD e Governo LS/BC; rinominare [Att. Form.] Nome Cognome; richiedere ruolo <@&1495237445808029746>.`,
     `Firma: <@1084580275582931044>`,
     ``,
     `supervisionato da ${formatDiscordMention(getValue(colloquioDom.supervisorId), "<@id discord di supervisione>")}`
   ].join("\n");
+}
+
+function describeColloquioPrecheckValue(kind, value) {
+  const labels = {
+    criminalRecord: {
+      clean: "Pulita",
+      not_clean: "Non pulita"
+    },
+    weaponLicense: {
+      valid: "Presente / valido",
+      missing: "Assente / non valido"
+    }
+  };
+
+  return labels[kind]?.[value] || "Da controllare";
 }
 
 function copyColloquioSummaryToClipboard() {
@@ -436,9 +470,11 @@ function buildColloquioFilename() {
 
 function saveColloquioState() {
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     candidateName: getValue(colloquioDom.candidateName),
     candidateDob: getValue(colloquioDom.candidateDob),
+    criminalRecordCheck: getValue(colloquioDom.criminalRecordCheck),
+    weaponLicenseCheck: getValue(colloquioDom.weaponLicenseCheck),
     startTime: getValue(colloquioDom.startTime),
     endTime: getValue(colloquioDom.endTime),
     discordLink: getValue(colloquioDom.discordLink),
@@ -457,11 +493,13 @@ function loadColloquioSavedState() {
 
   setInputValue(colloquioDom.candidateName, data.candidateName);
   setInputValue(colloquioDom.candidateDob, data.candidateDob);
+  setInputValue(colloquioDom.criminalRecordCheck, data.criminalRecordCheck);
+  setInputValue(colloquioDom.weaponLicenseCheck, data.weaponLicenseCheck);
   setInputValue(colloquioDom.startTime, data.startTime);
   setInputValue(colloquioDom.endTime, data.endTime);
   setInputValue(colloquioDom.discordLink, data.discordLink);
   setInputValue(colloquioDom.supervisorId, data.supervisorId);
-  restoreValues(".score-select", "questionId", data.scores, { blankLegacyZero: data.schemaVersion !== 2 });
+  restoreValues(".score-select", "questionId", data.scores, { blankLegacyZero: Number(data.schemaVersion || 1) < 2 });
   restoreValues(".note-input", "questionId", data.notes);
 }
 
@@ -474,6 +512,8 @@ function resetColloquio() {
   [
     colloquioDom.candidateName,
     colloquioDom.candidateDob,
+    colloquioDom.criminalRecordCheck,
+    colloquioDom.weaponLicenseCheck,
     colloquioDom.startTime,
     colloquioDom.endTime,
     colloquioDom.discordLink,
@@ -516,6 +556,10 @@ const formazioneDom = {
   trainingStartTime: document.getElementById("trainingStartTime"),
   trainingEndTime: document.getElementById("trainingEndTime"),
   trainingSupervisorId: document.getElementById("trainingSupervisorId"),
+  trainingVideosStatus: document.getElementById("trainingVideosStatus"),
+  trainingRoom: document.getElementById("trainingRoom"),
+  trainingRecordStatus: document.getElementById("trainingRecordStatus"),
+  trainingReportStatus: document.getElementById("trainingReportStatus"),
   trainingParticipants: document.getElementById("trainingParticipants"),
   copyTrainingSummaryBtn: document.getElementById("copyTrainingSummaryBtn"),
   downloadTrainingSummaryBtn: document.getElementById("downloadTrainingSummaryBtn"),
@@ -543,7 +587,7 @@ function renderTrainingQuestions() {
         noteClass: "training-note-input",
         dataKey: "trainingQuestionId",
         noteLabel: "Note formatore",
-        withAnswer: false
+        withAnswer: true
       }));
     });
 
@@ -562,6 +606,10 @@ function attachTrainingListeners() {
     formazioneDom.trainingStartTime,
     formazioneDom.trainingEndTime,
     formazioneDom.trainingSupervisorId,
+    formazioneDom.trainingVideosStatus,
+    formazioneDom.trainingRoom,
+    formazioneDom.trainingRecordStatus,
+    formazioneDom.trainingReportStatus,
     formazioneDom.trainingParticipants
   ].forEach(el => {
     if (!el) return;
@@ -607,6 +655,10 @@ function describeTrainingMissingFields(totals) {
   if (!getValue(formazioneDom.trainingStartTime)) missing.push("inizio");
   if (!getValue(formazioneDom.trainingEndTime)) missing.push("fine");
   if (!getValue(formazioneDom.trainingSupervisorId)) missing.push("supervisore");
+  if (getValue(formazioneDom.trainingVideosStatus) !== "completed") missing.push("video formazione");
+  if (!["formazione_1", "formazione_2"].includes(getValue(formazioneDom.trainingRoom))) missing.push("stanza formazione");
+  if (getValue(formazioneDom.trainingRecordStatus) !== "completed") missing.push("schedatura");
+  if (getValue(formazioneDom.trainingReportStatus) !== "completed") missing.push("rapporto formazione");
   if (!getValue(formazioneDom.trainingParticipants)) missing.push("partecipanti");
   if (totals.remaining > 0) missing.push(`${totals.remaining} punteggi`);
 
@@ -626,10 +678,39 @@ function buildTrainingFinalSummary(totals) {
     `Orario fine Formazione: ${getValue(formazioneDom.trainingEndTime)}`,
     `Relatori: <@1084580275582931044>`,
     `Supervisionato da (Istruttore/Gestore): ${formatDiscordMention(getValue(formazioneDom.trainingSupervisorId), "<@id discord>")}`,
+    `Video formazione: ${describeTrainingStatus("videos", getValue(formazioneDom.trainingVideosStatus))}`,
+    `Canale vocale: ${describeTrainingStatus("room", getValue(formazioneDom.trainingRoom))}`,
+    `Schedatura: ${describeTrainingStatus("record", getValue(formazioneDom.trainingRecordStatus))}`,
+    `Rapporto formazione: ${describeTrainingStatus("report", getValue(formazioneDom.trainingReportStatus))}`,
     `Punteggio formazione: ${totals.earned}/${totals.max}`,
     `Valutazione formazione: ${totals.percentage}%`,
-    `Nome cittadini partecipanti: ${normalizeParticipants(getValue(formazioneDom.trainingParticipants))}`
+    `Nome cittadini partecipanti: ${normalizeParticipants(getValue(formazioneDom.trainingParticipants))}`,
+    `Chiusura: richiedere ruolo <@&1495239424722735336>; rinominare [Recluta] Nome Cognome; assegnare matricola nel canale https://discord.com/channels/959468486504095824/996518318439682078; dare dotazione in game. Per pistola, taser e colpi attendere un sotto-ufficiale in su.`
   ].join("\n");
+}
+
+function describeTrainingStatus(kind, value) {
+  const labels = {
+    videos: {
+      completed: "Video 1, 2 e 3 completati",
+      missing: "Non completati"
+    },
+    room: {
+      waiting: "Attesa formazione",
+      formazione_1: "Formazione 1",
+      formazione_2: "Formazione 2"
+    },
+    record: {
+      completed: "Completata",
+      missing: "Da completare"
+    },
+    report: {
+      completed: "Compilato",
+      missing: "Da compilare"
+    }
+  };
+
+  return labels[kind]?.[value] || "Da verificare";
 }
 
 function normalizeParticipants(value) {
@@ -651,11 +732,15 @@ function buildTrainingFilename() {
 
 function saveTrainingState() {
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     trainingDate: getValue(formazioneDom.trainingDate),
     trainingStartTime: getValue(formazioneDom.trainingStartTime),
     trainingEndTime: getValue(formazioneDom.trainingEndTime),
     trainingSupervisorId: getValue(formazioneDom.trainingSupervisorId),
+    trainingVideosStatus: getValue(formazioneDom.trainingVideosStatus),
+    trainingRoom: getValue(formazioneDom.trainingRoom),
+    trainingRecordStatus: getValue(formazioneDom.trainingRecordStatus),
+    trainingReportStatus: getValue(formazioneDom.trainingReportStatus),
     trainingParticipants: getValue(formazioneDom.trainingParticipants),
     scores: collectValues(".training-score-select", "trainingQuestionId"),
     notes: collectValues(".training-note-input", "trainingQuestionId")
@@ -673,8 +758,12 @@ function loadTrainingSavedState() {
   setInputValue(formazioneDom.trainingStartTime, data.trainingStartTime);
   setInputValue(formazioneDom.trainingEndTime, data.trainingEndTime);
   setInputValue(formazioneDom.trainingSupervisorId, data.trainingSupervisorId);
+  setInputValue(formazioneDom.trainingVideosStatus, data.trainingVideosStatus);
+  setInputValue(formazioneDom.trainingRoom, data.trainingRoom);
+  setInputValue(formazioneDom.trainingRecordStatus, data.trainingRecordStatus);
+  setInputValue(formazioneDom.trainingReportStatus, data.trainingReportStatus);
   setInputValue(formazioneDom.trainingParticipants, data.trainingParticipants);
-  restoreValues(".training-score-select", "trainingQuestionId", data.scores, { blankLegacyZero: data.schemaVersion !== 2 });
+  restoreValues(".training-score-select", "trainingQuestionId", data.scores, { blankLegacyZero: Number(data.schemaVersion || 1) < 2 });
   restoreValues(".training-note-input", "trainingQuestionId", data.notes);
 }
 
@@ -689,6 +778,10 @@ function resetTraining() {
     formazioneDom.trainingStartTime,
     formazioneDom.trainingEndTime,
     formazioneDom.trainingSupervisorId,
+    formazioneDom.trainingVideosStatus,
+    formazioneDom.trainingRoom,
+    formazioneDom.trainingRecordStatus,
+    formazioneDom.trainingReportStatus,
     formazioneDom.trainingParticipants
   ].forEach(el => setInputValue(el, ""));
 

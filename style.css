@@ -393,6 +393,7 @@ svg {
 }
 
 .panel {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
@@ -522,6 +523,7 @@ a:focus-visible {
   min-height: 1.35em;
   margin: 14px 0 0;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .helper-text.is-complete {
@@ -643,6 +645,7 @@ a:focus-visible {
   margin: 0;
   font-size: 1rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .points-badge {
@@ -691,6 +694,7 @@ a:focus-visible {
 }
 
 .rules-box {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-2);
@@ -714,6 +718,12 @@ a:focus-visible {
 
 .rules-list strong {
   color: var(--text);
+}
+
+.rules-box a {
+  color: var(--primary);
+  font-weight: 850;
+  overflow-wrap: anywhere;
 }
 
 .rules-box-highlight {
@@ -780,7 +790,8 @@ a:focus-visible {
 @media (max-width: 760px) {
   .home-shell,
   .page-shell {
-    width: min(100% - 20px, 1240px);
+    width: calc(100% - 24px);
+    max-width: 1240px;
   }
 
   .home-topbar,

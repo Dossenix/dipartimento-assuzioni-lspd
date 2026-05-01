@@ -23,7 +23,7 @@
 
       <div class="topbar-actions">
         <a class="ghost-link" href="index.html">
-          <span aria-hidden="true">←</span>
+          <span aria-hidden="true">&larr;</span>
           Home
         </a>
       </div>
@@ -60,6 +60,43 @@
               ID Discord supervisore
               <input type="text" id="trainingSupervisorId" placeholder="Es. 123456789012345678" inputmode="numeric" />
             </label>
+
+            <label for="trainingVideosStatus">
+              Video formazione
+              <select id="trainingVideosStatus">
+                <option value="">Da verificare</option>
+                <option value="completed">Video 1, 2 e 3 completati</option>
+                <option value="missing">Non completati</option>
+              </select>
+            </label>
+
+            <label for="trainingRoom">
+              Canale vocale
+              <select id="trainingRoom">
+                <option value="">Da scegliere</option>
+                <option value="waiting">Attesa formazione</option>
+                <option value="formazione_1">Formazione 1</option>
+                <option value="formazione_2">Formazione 2</option>
+              </select>
+            </label>
+
+            <label for="trainingRecordStatus">
+              Schedatura
+              <select id="trainingRecordStatus">
+                <option value="">Da verificare</option>
+                <option value="completed">Completata</option>
+                <option value="missing">Da completare</option>
+              </select>
+            </label>
+
+            <label for="trainingReportStatus">
+              Rapporto formazione
+              <select id="trainingReportStatus">
+                <option value="">Da verificare</option>
+                <option value="completed">Compilato</option>
+                <option value="missing">Da compilare</option>
+              </select>
+            </label>
           </div>
 
           <div class="form-grid participants-field">
@@ -77,7 +114,7 @@
             <p class="eyebrow">Riepilogo live</p>
             <h2>Avanzamento</h2>
           </div>
-          <span id="trainingCompletionValue" class="panel-badge">0/9</span>
+          <span id="trainingCompletionValue" class="panel-badge">0/10</span>
         </div>
 
         <div class="panel-body">
@@ -130,29 +167,30 @@
 
       <div class="panel-body">
         <div class="rules-grid">
-          <div class="rules-box">
-            <h3>Formazione</h3>
+          <div class="rules-box rules-box-highlight">
+            <h3>Prima delle domande</h3>
             <ul class="rules-list">
-              <li>Segna ogni sessione nel canale <strong>#rapporto-formazione</strong>.</li>
-              <li><strong>La prima formazione non va effettuata da soli</strong>: attendi un altro formatore.</li>
-              <li>Compila le schedature di ciascun candidato seguendo <strong>#modulo-schedature</strong>.</li>
+              <li>Il cittadino deve aver guardato tutti e tre i video formazione.</li>
+              <li>Spostalo dalla vocale attesa formazione a formazione 1 o formazione 2.</li>
+              <li>Completa schedatura nel canale apposito e rapporto formazione.</li>
             </ul>
           </div>
 
-          <div class="rules-box rules-box-highlight">
-            <h3>Prima di iniziare</h3>
-            <p>
-              Il candidato deve aver visto VIDEO-FORMAZ-1, VIDEO-FORMAZ-2 e VIDEO-FORMAZ-3,
-              poi deve aver inserito la reazione richiesta.
-            </p>
+          <div class="rules-box">
+            <h3>Durante il test</h3>
+            <ul class="rules-list">
+              <li>Fai domande su tutti e tre i video, sia teoria sia pratica in città.</li>
+              <li>Mettilo un minimo in difficoltà per capire come ragiona, senza esagerare.</li>
+              <li>Se sbaglia, spiegagli gli errori e correggi i punti critici dei moduli.</li>
+            </ul>
           </div>
 
           <div class="rules-box">
-            <h3>Pubblicazione</h3>
+            <h3>Chiusura</h3>
             <ul class="rules-list">
-              <li>Le schedature devono essere pubblicate appena inviato il messaggio.</li>
-              <li>Puoi usare la scritta <strong>pubblica</strong> oppure il megafono in alto a destra.</li>
-              <li>Le schedature non pubblicate non saranno considerate valide.</li>
+              <li>Richiedi il ruolo <strong>&lt;@&amp;1495239424722735336&gt;</strong>.</li>
+              <li>Rinominalo <strong>[Recluta] Nome Cognome</strong> e assegna la matricola nel <a href="https://discord.com/channels/959468486504095824/996518318439682078">canale dedicato</a>.</li>
+              <li>Dai la dotazione in game; per pistola, taser e colpi serve un sotto-ufficiale in su.</li>
             </ul>
           </div>
         </div>
