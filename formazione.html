@@ -3,67 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Formazione</title>
+  <title>Modulo Formazione - Portale LSPD</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="app-body">
+  <a class="skip-link" href="#trainingQuestionsContainer">Vai agli argomenti</a>
+
   <div class="page-shell">
     <header class="topbar">
-      <div>
-        <p class="eyebrow">Portale Gestione Interna</p>
-        <h1>Modulo Formazione</h1>
-      </div>
+      <a class="brand-link" href="index.html" aria-label="Torna alla home">
+        <span class="brand-mark">LSPD</span>
+        <span class="brand-copy">
+          <strong>Modulo Formazione</strong>
+          <small>Registro sessione</small>
+        </span>
+      </a>
+
       <div class="topbar-actions">
-        <a class="ghost-link" href="index.html">← Torna alla home</a>
+        <a class="ghost-link" href="index.html">
+          <span aria-hidden="true">←</span>
+          Home
+        </a>
       </div>
     </header>
 
     <main class="main-grid">
       <section class="panel">
         <div class="panel-header">
-          <h2>Dati iniziali</h2>
-          <p>Compila i dati della formazione e assegna i punti per ogni argomento trattato.</p>
+          <div>
+            <p class="eyebrow">Dati iniziali</p>
+            <h1>Formazione</h1>
+          </div>
+          <span class="panel-badge">Autosave</span>
         </div>
 
         <div class="panel-body">
           <div class="form-grid cols-2">
-            <label>
+            <label for="trainingDate">
               Data
               <input type="date" id="trainingDate" />
             </label>
 
-            <label>
-              Orario inizio Formazione
+            <label for="trainingStartTime">
+              Orario inizio formazione
               <input type="time" id="trainingStartTime" />
             </label>
 
-            <label>
-              Orario fine Formazione
+            <label for="trainingEndTime">
+              Orario fine formazione
               <input type="time" id="trainingEndTime" />
             </label>
 
-            <label>
-              Supervisionato da (Istruttore/Gestore)
-              <input type="text" id="trainingSupervisorId" placeholder="Es. 123456789012345678" />
+            <label for="trainingSupervisorId">
+              ID Discord supervisore
+              <input type="text" id="trainingSupervisorId" placeholder="Es. 123456789012345678" inputmode="numeric" />
             </label>
           </div>
 
           <div class="form-grid participants-field">
-            <label>
+            <label for="trainingParticipants">
               Nome cittadini partecipanti
-              <textarea id="trainingParticipants" placeholder="Inserisci uno o più nomi, separati da virgola o andando a capo"></textarea>
+              <textarea id="trainingParticipants" placeholder="Un nome per riga oppure separati da virgola"></textarea>
             </label>
           </div>
         </div>
       </section>
 
-      <aside class="panel sticky-panel">
+      <aside class="panel sticky-panel" aria-label="Riepilogo formazione">
         <div class="panel-header">
-          <h2>Riepilogo live</h2>
-          <p>Totale punti assegnati durante la formazione.</p>
+          <div>
+            <p class="eyebrow">Riepilogo live</p>
+            <h2>Avanzamento</h2>
+          </div>
+          <span id="trainingCompletionValue" class="panel-badge">0/9</span>
         </div>
 
         <div class="panel-body">
+          <div class="progress-track" aria-hidden="true">
+            <span id="trainingProgressBar"></span>
+          </div>
+
           <div class="stats-grid">
             <div class="stat-card">
               <span>Punti ottenuti</span>
@@ -86,31 +105,53 @@
             </div>
           </div>
 
+          <p id="trainingMissingFields" class="helper-text" aria-live="polite"></p>
+
           <div class="side-actions">
-            <button id="copyTrainingSummaryBtn" class="btn btn-primary" type="button">Copia modulo finale</button>
-            <button id="resetTrainingBtn" class="btn btn-danger" type="button">Reset formazione</button>
+            <button id="copyTrainingSummaryBtn" class="btn btn-primary" type="button">Copia modulo</button>
+            <button id="downloadTrainingSummaryBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+            <button id="resetTrainingBtn" class="btn btn-danger" type="button">Reset</button>
           </div>
+
+          <p id="trainingSaveStatus" class="save-status" aria-live="polite">Pronto</p>
         </div>
       </aside>
     </main>
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Istruzioni operative</h2>
+        <div>
+          <p class="eyebrow">Procedure</p>
+          <h2>Istruzioni operative</h2>
+        </div>
       </div>
 
       <div class="panel-body">
-        <div class="rules-box">
-          <ul class="rules-list">
-            <li>Ogni volta che si effettua una formazione, andrà segnato tutto sul canale <strong>#rapporto-formazione</strong> compilando gli appositi campi.</li>
-            <li>Per qualsiasi domanda è possibile chiedere nel canale apposito.</li>
-            <li><strong>La prima formazione non va effettuata da soli</strong> — è obbligatorio attendere un altro formatore.</li>
-            <li>Non appena terminata la formazione, andranno compilate le schedature di ciascun candidato seguendo il modulo <strong>#modulo-schedature</strong> e andranno pubblicate nel canale <strong>#schedature</strong>.</li>
-          </ul>
+        <div class="rules-grid">
+          <div class="rules-box">
+            <h3>Formazione</h3>
+            <ul class="rules-list">
+              <li>Segna ogni sessione nel canale <strong>#rapporto-formazione</strong>.</li>
+              <li><strong>La prima formazione non va effettuata da soli</strong>: attendi un altro formatore.</li>
+              <li>Compila le schedature di ciascun candidato seguendo <strong>#modulo-schedature</strong>.</li>
+            </ul>
+          </div>
 
-          <div class="rules-highlight">
-            La formazione verrà avviata solo quando un candidato avrà visto tutti i video di formazione
-            (VIDEO-FORMAZ-1, VIDEO-FORMAZ-2, VIDEO-FORMAZ-3) e avrà messo la reazione apposita.
+          <div class="rules-box rules-box-highlight">
+            <h3>Prima di iniziare</h3>
+            <p>
+              Il candidato deve aver visto VIDEO-FORMAZ-1, VIDEO-FORMAZ-2 e VIDEO-FORMAZ-3,
+              poi deve aver inserito la reazione richiesta.
+            </p>
+          </div>
+
+          <div class="rules-box">
+            <h3>Pubblicazione</h3>
+            <ul class="rules-list">
+              <li>Le schedature devono essere pubblicate appena inviato il messaggio.</li>
+              <li>Puoi usare la scritta <strong>pubblica</strong> oppure il megafono in alto a destra.</li>
+              <li>Le schedature non pubblicate non saranno considerate valide.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -118,24 +159,10 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Norme di pubblicazione</h2>
-      </div>
-
-      <div class="panel-body">
-        <div class="rules-box">
-          <ul class="rules-list">
-            <li>Quando si inviano le schedature, è obbligatorio pubblicarle utilizzando la scritta in basso <strong>"pubblica"</strong> non appena si invia il messaggio.</li>
-            <li>In alternativa è possibile utilizzare il megafono posizionato in alto a destra del messaggio.</li>
-            <li>Le schedature non pubblicate non saranno considerate valide.</li>
-          </ul>
+        <div>
+          <p class="eyebrow">Valutazione</p>
+          <h2>Argomenti obbligatori</h2>
         </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <h2>Argomenti obbligatori</h2>
-        <p>Assegna un punteggio per ogni argomento trattato durante la formazione.</p>
       </div>
 
       <div class="panel-body">
@@ -145,16 +172,19 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Modulo finale generato</h2>
-        <p>Testo pronto da copiare e incollare.</p>
+        <div>
+          <p class="eyebrow">Output</p>
+          <h2>Modulo finale</h2>
+        </div>
       </div>
 
       <div class="panel-body">
-        <textarea id="trainingFinalSummary" class="summary-box" readonly></textarea>
+        <textarea id="trainingFinalSummary" class="summary-box" readonly aria-label="Modulo finale generato"></textarea>
       </div>
     </section>
   </div>
 
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <script src="script.js"></script>
 </body>
 </html>

@@ -3,83 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portale Operativo</title>
+  <title>Portale Operativo LSPD</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="home-v2-body">
-  <div class="home-v2-overlay"></div>
-
-  <main class="home-v2-shell">
-    <header class="home-v2-hero">
-      <div class="home-v2-kicker">Portale operativo interno</div>
-
-      <h1>Gestione Colloqui e Formazioni</h1>
-
-      <p>
-        Seleziona una delle due aree per accedere agli strumenti di compilazione,
-        valutazione e generazione dei moduli finali.
-      </p>
-    </header>
-
-    <section class="home-v2-grid">
-      <a href="colloquio.html" class="home-v2-card home-v2-card-primary">
-        <div class="home-v2-card-glow"></div>
-
-        <div class="home-v2-card-top">
-          <span class="home-v2-chip">Area 01</span>
-          <span class="home-v2-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M9 3h6l1 2h3a1 1 0 0 1 1 1v12a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a1 1 0 0 1 1-1h3l1-2Zm0 4H7v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7h-2v2a1 1 0 1 1-2 0V7h-2v2a1 1 0 1 1-2 0V7Zm1-2h4l-.5-1h-3L10 5Z"/>
-            </svg>
-          </span>
-        </div>
-
-        <div class="home-v2-card-content">
-          <h2>Colloquio</h2>
-          <p>
-            Accesso alla sezione dedicata alla valutazione dei candidati, con
-            punteggi per domanda, risposte di riferimento, calcolo percentuale
-            ed esito finale automatico.
-          </p>
-        </div>
-
-        <div class="home-v2-card-footer">
-          <span>Apri sezione</span>
-          <span class="home-v2-arrow">→</span>
-        </div>
+<body class="home-body">
+  <main class="home-shell">
+    <header class="home-topbar">
+      <a class="brand-link" href="index.html" aria-label="Portale operativo LSPD">
+        <span class="brand-mark">LSPD</span>
+        <span class="brand-copy">
+          <strong>Portale Operativo</strong>
+          <small>Colloqui e formazione</small>
+        </span>
       </a>
 
-      <a href="formazione.html" class="home-v2-card home-v2-card-secondary">
-        <div class="home-v2-card-glow"></div>
+      <nav class="home-nav" aria-label="Sezioni principali">
+        <a href="colloquio.html">Colloquio</a>
+        <a href="formazione.html">Formazione</a>
+      </nav>
+    </header>
 
-        <div class="home-v2-card-top">
-          <span class="home-v2-chip">Area 02</span>
-          <span class="home-v2-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3 2 8l10 5 8-4v6h2V8L12 3Zm-7 8.5V15c0 1.9 3.1 4 7 4s7-2.1 7-4v-3.5l-7 3.5-7-3.5Z"/>
-            </svg>
-          </span>
+    <section class="home-hero" aria-labelledby="homeTitle">
+      <div>
+        <p class="eyebrow">Dashboard interna</p>
+        <h1 id="homeTitle">Gestione selezioni LSPD</h1>
+      </div>
+
+      <div class="home-hero-panel" aria-label="Stato strumenti">
+        <span>Autosave locale</span>
+        <strong>Attivo</strong>
+      </div>
+    </section>
+
+    <section class="home-grid" aria-label="Aree operative">
+      <a href="colloquio.html" class="home-card home-card-primary">
+        <span class="card-index">01</span>
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 3h8l1 3h3v15H4V6h3l1-3Zm1.4 2-.35 1h5.9l-.35-1H9.4ZM6 8v11h12V8H6Zm2 3h8v2H8v-2Zm0 4h5v2H8v-2Z"/>
+          </svg>
+        </span>
+
+        <div class="home-card-copy">
+          <h2>Colloquio</h2>
+          <p>Valutazione candidato, risposte di riferimento, punteggio live ed esito finale.</p>
         </div>
 
-        <div class="home-v2-card-content">
+        <ul class="card-meta" aria-label="Dettagli colloquio">
+          <li>23 domande</li>
+          <li>97 punti</li>
+          <li>esito automatico</li>
+        </ul>
+
+        <span class="card-action">
+          Apri area
+          <span aria-hidden="true">→</span>
+        </span>
+      </a>
+
+      <a href="formazione.html" class="home-card home-card-secondary">
+        <span class="card-index">02</span>
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3 2 8l10 5 10-5-10-5Zm-6 8.2V15c0 2.2 3.3 4 6 4s6-1.8 6-4v-3.8l-6 3-6-3Zm14 .8v5h2v-6h-2Z"/>
+          </svg>
+        </span>
+
+        <div class="home-card-copy">
           <h2>Formazione</h2>
-          <p>
-            Accesso all’area destinata alle sessioni formative, con punteggi sugli
-            argomenti obbligatori e generazione del modulo conclusivo pronto da inviare.
-          </p>
+          <p>Registro sessione, partecipanti, argomenti obbligatori e modulo conclusivo.</p>
         </div>
 
-        <div class="home-v2-card-footer">
-          <span>Apri sezione</span>
-          <span class="home-v2-arrow">→</span>
-        </div>
+        <ul class="card-meta" aria-label="Dettagli formazione">
+          <li>9 argomenti</li>
+          <li>38 punti</li>
+          <li>report pronto</li>
+        </ul>
+
+        <span class="card-action">
+          Apri area
+          <span aria-hidden="true">→</span>
+        </span>
       </a>
     </section>
 
-    <footer class="home-v2-footer">
-      <div class="home-v2-footer-line"></div>
-      <span>Sistema interno • Accesso rapido alle aree operative</span>
-    </footer>
+    <section class="home-strip" aria-label="Funzioni principali">
+      <span>Salvataggio automatico</span>
+      <span>Copia rapida Discord</span>
+      <span>Download modulo TXT</span>
+      <span>Uso locale anche offline</span>
+    </section>
   </main>
 </body>
 </html>

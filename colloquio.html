@@ -3,70 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Colloquio</title>
+  <title>Modulo Colloquio - Portale LSPD</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="app-body">
+  <a class="skip-link" href="#questionsContainer">Vai alle domande</a>
+
   <div class="page-shell">
     <header class="topbar">
-      <div>
-        <p class="eyebrow">Portale Gestione Interna</p>
-        <h1>Modulo Colloquio</h1>
-      </div>
+      <a class="brand-link" href="index.html" aria-label="Torna alla home">
+        <span class="brand-mark">LSPD</span>
+        <span class="brand-copy">
+          <strong>Modulo Colloquio</strong>
+          <small>Valutazione candidato</small>
+        </span>
+      </a>
+
       <div class="topbar-actions">
-        <a class="ghost-link" href="index.html">← Torna alla home</a>
+        <a class="ghost-link" href="index.html">
+          <span aria-hidden="true">←</span>
+          Home
+        </a>
       </div>
     </header>
 
     <main class="main-grid">
       <section class="panel">
         <div class="panel-header">
-          <h2>Dati iniziali</h2>
-          <p>Compila i dati del candidato e dell’esaminatore.</p>
+          <div>
+            <p class="eyebrow">Dati iniziali</p>
+            <h1>Colloquio</h1>
+          </div>
+          <span class="panel-badge">Autosave</span>
         </div>
 
         <div class="panel-body">
           <div class="form-grid cols-2">
-            <label>
+            <label for="candidateName">
               Nome e Cognome
-              <input type="text" id="candidateName" placeholder="Es. Mario Rossi" />
+              <input type="text" id="candidateName" placeholder="Es. Mario Rossi" autocomplete="name" />
             </label>
 
-            <label>
+            <label for="candidateDob">
               Data di nascita
               <input type="date" id="candidateDob" />
             </label>
 
-            <label>
-              Orario Inizio Colloquio
+            <label for="startTime">
+              Orario inizio colloquio
               <input type="time" id="startTime" />
             </label>
 
-            <label>
-              Orario Fine
+            <label for="endTime">
+              Orario fine
               <input type="time" id="endTime" />
             </label>
 
-            <label>
-              Link Discord Esito Bando
-              <input type="text" id="discordLink" placeholder="https://discord.com/..." />
+            <label for="discordLink">
+              Link Discord esito bando
+              <input type="url" id="discordLink" placeholder="https://discord.com/..." inputmode="url" />
             </label>
 
-            <label>
-              ID Discord Supervisore
-              <input type="text" id="supervisorId" placeholder="Es. 123456789012345678" />
+            <label for="supervisorId">
+              ID Discord supervisore
+              <input type="text" id="supervisorId" placeholder="Es. 123456789012345678" inputmode="numeric" />
             </label>
           </div>
         </div>
       </section>
 
-      <aside class="panel sticky-panel">
+      <aside class="panel sticky-panel" aria-label="Riepilogo colloquio">
         <div class="panel-header">
-          <h2>Riepilogo live</h2>
-          <p>Si aggiorna automaticamente durante il colloquio.</p>
+          <div>
+            <p class="eyebrow">Riepilogo live</p>
+            <h2>Avanzamento</h2>
+          </div>
+          <span id="colloquioCompletionValue" class="panel-badge">0/23</span>
         </div>
 
         <div class="panel-body">
+          <div class="progress-track" aria-hidden="true">
+            <span id="colloquioProgressBar"></span>
+          </div>
+
           <div class="stats-grid">
             <div class="stat-card">
               <span>Punti ottenuti</span>
@@ -83,27 +102,31 @@
               <strong id="percentageValue">0%</strong>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card stat-wide">
               <span>Esito</span>
-              <strong id="resultValue">Da calcolare</strong>
+              <strong id="resultValue" aria-live="polite">Da calcolare</strong>
             </div>
           </div>
 
+          <p id="colloquioMissingFields" class="helper-text" aria-live="polite"></p>
+
           <div class="side-actions">
-            <button id="copySummaryBtn" class="btn btn-primary" type="button">Copia modulo finale</button>
-            <button id="resetBtn" class="btn btn-danger" type="button">Reset colloquio</button>
+            <button id="copySummaryBtn" class="btn btn-primary" type="button">Copia modulo</button>
+            <button id="downloadSummaryBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+            <button id="resetBtn" class="btn btn-danger" type="button">Reset</button>
           </div>
+
+          <p id="colloquioSaveStatus" class="save-status" aria-live="polite">Pronto</p>
         </div>
       </aside>
     </main>
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Domande e valutazione</h2>
-        <p>
-          L’esaminatore assegna un punteggio per ogni domanda. La risposta corretta
-          può essere aperta solo quando serve.
-        </p>
+        <div>
+          <p class="eyebrow">Valutazione</p>
+          <h2>Domande</h2>
+        </div>
       </div>
 
       <div class="panel-body">
@@ -113,16 +136,19 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Modulo finale generato</h2>
-        <p>Testo pronto da copiare e incollare.</p>
+        <div>
+          <p class="eyebrow">Output</p>
+          <h2>Modulo finale</h2>
+        </div>
       </div>
 
       <div class="panel-body">
-        <textarea id="finalSummary" class="summary-box" readonly></textarea>
+        <textarea id="finalSummary" class="summary-box" readonly aria-label="Modulo finale generato"></textarea>
       </div>
     </section>
   </div>
 
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <script src="script.js"></script>
 </body>
 </html>

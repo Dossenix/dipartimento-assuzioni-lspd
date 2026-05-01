@@ -256,6 +256,10 @@ const colloquioDom = {
   percentageValue: document.getElementById("percentageValue"),
   resultValue: document.getElementById("resultValue"),
   finalSummary: document.getElementById("finalSummary"),
+  progressBar: document.getElementById("colloquioProgressBar"),
+  completionValue: document.getElementById("colloquioCompletionValue"),
+  missingFields: document.getElementById("colloquioMissingFields"),
+  saveStatus: document.getElementById("colloquioSaveStatus"),
   candidateName: document.getElementById("candidateName"),
   candidateDob: document.getElementById("candidateDob"),
   startTime: document.getElementById("startTime"),
@@ -263,6 +267,7 @@ const colloquioDom = {
   discordLink: document.getElementById("discordLink"),
   supervisorId: document.getElementById("supervisorId"),
   copySummaryBtn: document.getElementById("copySummaryBtn"),
+  downloadSummaryBtn: document.getElementById("downloadSummaryBtn"),
   resetBtn: document.getElementById("resetBtn")
 };
 
@@ -274,77 +279,29 @@ function initColloquio() {
 }
 
 function renderColloquioQuestions() {
-  colloquioDom.questionsContainer.innerHTML = "";
+  replaceChildren(colloquioDom.questionsContainer);
 
   questionsData.forEach(sectionData => {
-    const section = document.createElement("div");
-    section.className = "section-block";
-
-    const header = document.createElement("div");
-    header.className = "section-header";
-    header.innerHTML = `<h3>${sectionData.section}</h3>`;
-
-    const inner = document.createElement("div");
-    inner.className = "section-inner";
+    const section = createSectionBlock(sectionData);
+    const inner = section.querySelector(".section-inner");
 
     sectionData.questions.forEach(question => {
-      const card = document.createElement("div");
-      card.className = "question-card";
-
-      card.innerHTML = `
-        <div class="question-top">
-          <h4 class="question-title">${question.title}</h4>
-          <span class="points-badge">Punti max: ${question.maxPoints}</span>
-        </div>
-
-        <div class="question-controls">
-          <label>
-            Punteggio assegnato
-            <select class="score-select" data-question-id="${question.id}">
-              ${createOptions(question.maxPoints)}
-            </select>
-          </label>
-
-          <label>
-            Note esaminatore
-            <input type="text" class="note-input" data-question-id="${question.id}" placeholder="Facoltativo..." />
-          </label>
-
-          <button type="button" class="btn btn-secondary toggle-answer-btn" data-target="answer-${question.id}">
-            Mostra risposta
-          </button>
-        </div>
-
-        <div class="answer-box" id="answer-${question.id}">
-          ${question.answer}
-        </div>
-      `;
-
-      inner.appendChild(card);
+      inner.appendChild(createQuestionCard({
+        question,
+        scoreClass: "score-select",
+        noteClass: "note-input",
+        dataKey: "questionId",
+        noteLabel: "Note esaminatore",
+        withAnswer: true
+      }));
     });
 
-    section.appendChild(header);
-    section.appendChild(inner);
     colloquioDom.questionsContainer.appendChild(section);
   });
 
-  document.querySelectorAll(".toggle-answer-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = document.getElementById(btn.dataset.target);
-      if (!target) return;
-
-      target.classList.toggle("open");
-      btn.textContent = target.classList.contains("open")
-        ? "Nascondi risposta"
-        : "Mostra risposta";
-    });
-  });
-
   document.querySelectorAll(".score-select, .note-input").forEach(el => {
-    el.addEventListener("input", () => {
-      updateColloquioEverything();
-      saveColloquioState();
-    });
+    el.addEventListener("input", handleColloquioInput);
+    el.addEventListener("change", handleColloquioInput);
   });
 }
 
@@ -358,195 +315,173 @@ function attachColloquioListeners() {
     colloquioDom.supervisorId
   ].forEach(el => {
     if (!el) return;
-    el.addEventListener("input", () => {
-      updateColloquioEverything();
-      saveColloquioState();
-    });
+    el.addEventListener("input", handleColloquioInput);
+    el.addEventListener("change", handleColloquioInput);
   });
 
   colloquioDom.copySummaryBtn?.addEventListener("click", copyColloquioSummaryToClipboard);
+  colloquioDom.downloadSummaryBtn?.addEventListener("click", () => {
+    downloadTextFile(colloquioDom.finalSummary?.value || "", buildColloquioFilename());
+  });
   colloquioDom.resetBtn?.addEventListener("click", resetColloquio);
 }
 
-function updateColloquioEverything() {
-  const totals = calculateColloquioTotals();
-  const evaluation = evaluateColloquioResult(totals.percentage);
-
-  colloquioDom.earnedPoints.textContent = totals.earned.toString();
-  colloquioDom.maxPoints.textContent = totals.max.toString();
-  colloquioDom.percentageValue.textContent = `${totals.percentage}%`;
-  colloquioDom.resultValue.textContent = evaluation.label;
-
-  colloquioDom.resultValue.classList.remove("result-positive", "result-negative");
-  colloquioDom.resultValue.classList.add(evaluation.isPassed ? "result-positive" : "result-negative");
-
-  colloquioDom.finalSummary.value = buildColloquioFinalSummary(totals.percentage, evaluation.label);
+function handleColloquioInput() {
+  updateColloquioEverything();
+  saveColloquioState();
 }
 
-function calculateColloquioTotals() {
-  const scoreEls = document.querySelectorAll(".score-select");
-  let earned = 0;
-  let max = 0;
+function updateColloquioEverything() {
+  const totals = calculateScoreTotals(".score-select", findColloquioQuestionById, "questionId");
+  const evaluation = evaluateColloquioResult(totals);
 
-  scoreEls.forEach(select => {
-    const questionId = select.dataset.questionId;
-    const q = findColloquioQuestionById(questionId);
-    if (!q) return;
+  setText(colloquioDom.earnedPoints, totals.earned.toString());
+  setText(colloquioDom.maxPoints, totals.max.toString());
+  setText(colloquioDom.percentageValue, `${totals.percentage}%`);
+  setText(colloquioDom.resultValue, evaluation.label);
+  setText(colloquioDom.completionValue, `${totals.completed}/${totals.total}`);
+  setProgress(colloquioDom.progressBar, totals.completionPercentage);
+  setResultClass(colloquioDom.resultValue, evaluation.status);
+  setHelperText(colloquioDom.missingFields, describeColloquioMissingFields(totals));
 
-    earned += Number(select.value || 0);
-    max += Number(q.maxPoints || 0);
-  });
-
-  const percentage = max > 0 ? Math.round((earned / max) * 100) : 0;
-  return { earned, max, percentage };
+  if (colloquioDom.finalSummary) {
+    colloquioDom.finalSummary.value = buildColloquioFinalSummary(totals, evaluation.label);
+  }
 }
 
 function findColloquioQuestionById(id) {
-  for (const section of questionsData) {
-    const found = section.questions.find(q => q.id === id);
-    if (found) return found;
-  }
-  return null;
+  return findQuestionById(questionsData, id);
 }
 
-function evaluateColloquioResult(percentage) {
-  if (percentage > 70) {
-    return { label: "Positivo", isPassed: true };
+function evaluateColloquioResult(totals) {
+  if (totals.completed === 0) {
+    return { label: "Da calcolare", status: "pending" };
   }
 
-  if (percentage >= 60) {
-    return { label: "Negativo - rimandato di 30 minuti", isPassed: false };
+  if (totals.remaining > 0) {
+    return { label: "In valutazione", status: "pending" };
   }
 
-  if (percentage >= 50) {
-    return { label: "Negativo - rimandato di 45 minuti", isPassed: false };
+  if (totals.percentage > 70) {
+    return { label: "Positivo", status: "positive" };
   }
 
-  if (percentage >= 40) {
-    return { label: "Negativo - rimandato di 50 minuti", isPassed: false };
+  if (totals.percentage >= 60) {
+    return { label: "Negativo - rimandato di 30 minuti", status: "negative" };
   }
 
-  if (percentage >= 30) {
-    return { label: "Negativo - rimandato di 1 ora", isPassed: false };
+  if (totals.percentage >= 50) {
+    return { label: "Negativo - rimandato di 45 minuti", status: "negative" };
   }
 
-  if (percentage >= 20) {
-    return { label: "Negativo - rimandato di 1,5 ore", isPassed: false };
+  if (totals.percentage >= 40) {
+    return { label: "Negativo - rimandato di 50 minuti", status: "negative" };
   }
 
-  if (percentage >= 10) {
-    return { label: "Negativo - rimandato di 2,5 ore", isPassed: false };
+  if (totals.percentage >= 30) {
+    return { label: "Negativo - rimandato di 1 ora", status: "negative" };
   }
 
-  return { label: "Negativo - rimandato di 3 ore", isPassed: false };
+  if (totals.percentage >= 20) {
+    return { label: "Negativo - rimandato di 1,5 ore", status: "negative" };
+  }
+
+  if (totals.percentage >= 10) {
+    return { label: "Negativo - rimandato di 2,5 ore", status: "negative" };
+  }
+
+  return { label: "Negativo - rimandato di 3 ore", status: "negative" };
 }
 
-function buildColloquioFinalSummary(percentage, resultText) {
-  const now = new Date();
-  const giornoColloquio = formatDateIT(now);
+function describeColloquioMissingFields(totals) {
+  const missing = [];
 
-  const supervisorRaw = (colloquioDom.supervisorId?.value || "").trim();
-  const supervisorFormatted = supervisorRaw
-    ? `<@${supervisorRaw.replace(/[<@>]/g, "").trim()}>`
-    : "<@id discord di supervisione>";
+  if (!getValue(colloquioDom.candidateName)) missing.push("nome");
+  if (!getValue(colloquioDom.candidateDob)) missing.push("data nascita");
+  if (!getValue(colloquioDom.startTime)) missing.push("inizio");
+  if (!getValue(colloquioDom.endTime)) missing.push("fine");
+  if (!getValue(colloquioDom.discordLink)) missing.push("link bando");
+  if (!getValue(colloquioDom.supervisorId)) missing.push("supervisore");
+  if (totals.remaining > 0) missing.push(`${totals.remaining} punteggi`);
 
+  return missing.length
+    ? { text: `Da completare: ${missing.join(", ")}.`, complete: false }
+    : { text: "Modulo completo.", complete: true };
+}
+
+function buildColloquioFinalSummary(totals, resultText) {
   return [
-    `Nome e Cognome: ${colloquioDom.candidateName?.value?.trim() || ""}`,
-    `Data di nascita: ${formatInputDateToIT(colloquioDom.candidateDob?.value || "")}`,
-    `Orario Inizio Colloquio: ${colloquioDom.startTime?.value || ""}`,
-    `Orario Fine: ${colloquioDom.endTime?.value || ""}`,
-    `Giorno Colloquio: ${giornoColloquio}`,
-    `Esito Bando: ${colloquioDom.discordLink?.value?.trim() || ""}`,
+    `Nome e Cognome: ${getValue(colloquioDom.candidateName)}`,
+    `Data di nascita: ${formatInputDateToIT(getValue(colloquioDom.candidateDob))}`,
+    `Orario Inizio Colloquio: ${getValue(colloquioDom.startTime)}`,
+    `Orario Fine: ${getValue(colloquioDom.endTime)}`,
+    `Giorno Colloquio: ${formatDateIT(new Date())}`,
+    `Esito Bando: ${getValue(colloquioDom.discordLink)}`,
     `Esito Colloquio: ${resultText}`,
-    `Valutazione: ${percentage}%`,
+    `Valutazione: ${totals.percentage}%`,
     `Firma: <@1084580275582931044>`,
     ``,
-    `supervisionato da ${supervisorFormatted}`
+    `supervisionato da ${formatDiscordMention(getValue(colloquioDom.supervisorId), "<@id discord di supervisione>")}`
   ].join("\n");
 }
 
 function copyColloquioSummaryToClipboard() {
-  const text = colloquioDom.finalSummary?.value || "";
-  if (!text.trim()) {
-    alert("Nessun modulo da copiare.");
-    return;
-  }
+  copySummaryText(colloquioDom.finalSummary?.value || "");
+}
 
-  copyTextToClipboard(text)
-    .then(() => alert("Modulo finale copiato negli appunti."))
-    .catch(() => alert("Impossibile copiare automaticamente. Copialo manualmente dal riquadro."));
+function buildColloquioFilename() {
+  const name = getValue(colloquioDom.candidateName) || "colloquio";
+  return `modulo-colloquio-${slugify(name)}.txt`;
 }
 
 function saveColloquioState() {
   const payload = {
-    candidateName: colloquioDom.candidateName?.value || "",
-    candidateDob: colloquioDom.candidateDob?.value || "",
-    startTime: colloquioDom.startTime?.value || "",
-    endTime: colloquioDom.endTime?.value || "",
-    discordLink: colloquioDom.discordLink?.value || "",
-    supervisorId: colloquioDom.supervisorId?.value || "",
-    scores: {},
-    notes: {}
+    schemaVersion: 2,
+    candidateName: getValue(colloquioDom.candidateName),
+    candidateDob: getValue(colloquioDom.candidateDob),
+    startTime: getValue(colloquioDom.startTime),
+    endTime: getValue(colloquioDom.endTime),
+    discordLink: getValue(colloquioDom.discordLink),
+    supervisorId: getValue(colloquioDom.supervisorId),
+    scores: collectValues(".score-select", "questionId"),
+    notes: collectValues(".note-input", "questionId")
   };
 
-  document.querySelectorAll(".score-select").forEach(select => {
-    payload.scores[select.dataset.questionId] = select.value;
-  });
-
-  document.querySelectorAll(".note-input").forEach(input => {
-    payload.notes[input.dataset.questionId] = input.value;
-  });
-
-  localStorage.setItem(COLLOQUIO_STORAGE_KEY, JSON.stringify(payload));
+  const saved = setStorageItem(COLLOQUIO_STORAGE_KEY, JSON.stringify(payload));
+  updateSaveStatus(colloquioDom.saveStatus, saved);
 }
 
 function loadColloquioSavedState() {
-  const raw = localStorage.getItem(COLLOQUIO_STORAGE_KEY);
-  if (!raw) return;
+  const data = readSavedJson(COLLOQUIO_STORAGE_KEY);
+  if (!data) return;
 
-  try {
-    const data = JSON.parse(raw);
-
-    if (colloquioDom.candidateName) colloquioDom.candidateName.value = data.candidateName || "";
-    if (colloquioDom.candidateDob) colloquioDom.candidateDob.value = data.candidateDob || "";
-    if (colloquioDom.startTime) colloquioDom.startTime.value = data.startTime || "";
-    if (colloquioDom.endTime) colloquioDom.endTime.value = data.endTime || "";
-    if (colloquioDom.discordLink) colloquioDom.discordLink.value = data.discordLink || "";
-    if (colloquioDom.supervisorId) colloquioDom.supervisorId.value = data.supervisorId || "";
-
-    document.querySelectorAll(".score-select").forEach(select => {
-      const saved = data.scores?.[select.dataset.questionId];
-      if (saved !== undefined) select.value = saved;
-    });
-
-    document.querySelectorAll(".note-input").forEach(input => {
-      const saved = data.notes?.[input.dataset.questionId];
-      if (saved !== undefined) input.value = saved;
-    });
-  } catch (error) {
-    console.error("Errore nel caricamento del salvataggio colloquio:", error);
-  }
+  setInputValue(colloquioDom.candidateName, data.candidateName);
+  setInputValue(colloquioDom.candidateDob, data.candidateDob);
+  setInputValue(colloquioDom.startTime, data.startTime);
+  setInputValue(colloquioDom.endTime, data.endTime);
+  setInputValue(colloquioDom.discordLink, data.discordLink);
+  setInputValue(colloquioDom.supervisorId, data.supervisorId);
+  restoreValues(".score-select", "questionId", data.scores, { blankLegacyZero: data.schemaVersion !== 2 });
+  restoreValues(".note-input", "questionId", data.notes);
 }
 
 function resetColloquio() {
   const confirmReset = confirm("Vuoi davvero resettare completamente il colloquio?");
   if (!confirmReset) return;
 
-  localStorage.removeItem(COLLOQUIO_STORAGE_KEY);
+  removeStorageItem(COLLOQUIO_STORAGE_KEY);
 
-  if (colloquioDom.candidateName) colloquioDom.candidateName.value = "";
-  if (colloquioDom.candidateDob) colloquioDom.candidateDob.value = "";
-  if (colloquioDom.startTime) colloquioDom.startTime.value = "";
-  if (colloquioDom.endTime) colloquioDom.endTime.value = "";
-  if (colloquioDom.discordLink) colloquioDom.discordLink.value = "";
-  if (colloquioDom.supervisorId) colloquioDom.supervisorId.value = "";
+  [
+    colloquioDom.candidateName,
+    colloquioDom.candidateDob,
+    colloquioDom.startTime,
+    colloquioDom.endTime,
+    colloquioDom.discordLink,
+    colloquioDom.supervisorId
+  ].forEach(el => setInputValue(el, ""));
 
-  document.querySelectorAll(".score-select").forEach(select => {
-    select.value = "0";
-  });
-
-  document.querySelectorAll(".note-input").forEach(input => {
-    input.value = "";
+  document.querySelectorAll(".score-select, .note-input").forEach(el => {
+    el.value = "";
   });
 
   document.querySelectorAll(".answer-box").forEach(box => {
@@ -555,9 +490,12 @@ function resetColloquio() {
 
   document.querySelectorAll(".toggle-answer-btn").forEach(btn => {
     btn.textContent = "Mostra risposta";
+    btn.setAttribute("aria-expanded", "false");
   });
 
   updateColloquioEverything();
+  updateSaveStatus(colloquioDom.saveStatus, true, "Reset completato");
+  showToast("Colloquio resettato.", "success");
 }
 
 /* =========================
@@ -569,6 +507,10 @@ const formazioneDom = {
   trainingEarnedPoints: document.getElementById("trainingEarnedPoints"),
   trainingMaxPoints: document.getElementById("trainingMaxPoints"),
   trainingPercentageValue: document.getElementById("trainingPercentageValue"),
+  trainingCompletionValue: document.getElementById("trainingCompletionValue"),
+  trainingProgressBar: document.getElementById("trainingProgressBar"),
+  trainingMissingFields: document.getElementById("trainingMissingFields"),
+  trainingSaveStatus: document.getElementById("trainingSaveStatus"),
   trainingFinalSummary: document.getElementById("trainingFinalSummary"),
   trainingDate: document.getElementById("trainingDate"),
   trainingStartTime: document.getElementById("trainingStartTime"),
@@ -576,6 +518,7 @@ const formazioneDom = {
   trainingSupervisorId: document.getElementById("trainingSupervisorId"),
   trainingParticipants: document.getElementById("trainingParticipants"),
   copyTrainingSummaryBtn: document.getElementById("copyTrainingSummaryBtn"),
+  downloadTrainingSummaryBtn: document.getElementById("downloadTrainingSummaryBtn"),
   resetTrainingBtn: document.getElementById("resetTrainingBtn")
 };
 
@@ -587,59 +530,29 @@ function initFormazione() {
 }
 
 function renderTrainingQuestions() {
-  formazioneDom.trainingQuestionsContainer.innerHTML = "";
+  replaceChildren(formazioneDom.trainingQuestionsContainer);
 
   trainingQuestionsData.forEach(sectionData => {
-    const section = document.createElement("div");
-    section.className = "section-block";
-
-    const header = document.createElement("div");
-    header.className = "section-header";
-    header.innerHTML = `<h3>${sectionData.section}</h3>`;
-
-    const inner = document.createElement("div");
-    inner.className = "section-inner";
+    const section = createSectionBlock(sectionData);
+    const inner = section.querySelector(".section-inner");
 
     sectionData.questions.forEach(question => {
-      const card = document.createElement("div");
-      card.className = "question-card";
-
-      card.innerHTML = `
-        <div class="question-top">
-          <h4 class="question-title">${question.title}</h4>
-          <span class="points-badge">Punti max: ${question.maxPoints}</span>
-        </div>
-
-        <div class="question-controls">
-          <label>
-            Punteggio assegnato
-            <select class="training-score-select" data-training-question-id="${question.id}">
-              ${createOptions(question.maxPoints)}
-            </select>
-          </label>
-
-          <label>
-            Note formatore
-            <input type="text" class="training-note-input" data-training-question-id="${question.id}" placeholder="Facoltativo..." />
-          </label>
-
-          <div></div>
-        </div>
-      `;
-
-      inner.appendChild(card);
+      inner.appendChild(createQuestionCard({
+        question,
+        scoreClass: "training-score-select",
+        noteClass: "training-note-input",
+        dataKey: "trainingQuestionId",
+        noteLabel: "Note formatore",
+        withAnswer: false
+      }));
     });
 
-    section.appendChild(header);
-    section.appendChild(inner);
     formazioneDom.trainingQuestionsContainer.appendChild(section);
   });
 
   document.querySelectorAll(".training-score-select, .training-note-input").forEach(el => {
-    el.addEventListener("input", () => {
-      updateTrainingEverything();
-      saveTrainingState();
-    });
+    el.addEventListener("input", handleTrainingInput);
+    el.addEventListener("change", handleTrainingInput);
   });
 }
 
@@ -652,169 +565,393 @@ function attachTrainingListeners() {
     formazioneDom.trainingParticipants
   ].forEach(el => {
     if (!el) return;
-    el.addEventListener("input", () => {
-      updateTrainingEverything();
-      saveTrainingState();
-    });
+    el.addEventListener("input", handleTrainingInput);
+    el.addEventListener("change", handleTrainingInput);
   });
 
   formazioneDom.copyTrainingSummaryBtn?.addEventListener("click", copyTrainingSummaryToClipboard);
+  formazioneDom.downloadTrainingSummaryBtn?.addEventListener("click", () => {
+    downloadTextFile(formazioneDom.trainingFinalSummary?.value || "", buildTrainingFilename());
+  });
   formazioneDom.resetTrainingBtn?.addEventListener("click", resetTraining);
 }
 
-function updateTrainingEverything() {
-  const totals = calculateTrainingTotals();
-
-  formazioneDom.trainingEarnedPoints.textContent = totals.earned.toString();
-  formazioneDom.trainingMaxPoints.textContent = totals.max.toString();
-  formazioneDom.trainingPercentageValue.textContent = `${totals.percentage}%`;
-  formazioneDom.trainingFinalSummary.value = buildTrainingFinalSummary();
+function handleTrainingInput() {
+  updateTrainingEverything();
+  saveTrainingState();
 }
 
-function calculateTrainingTotals() {
-  const scoreEls = document.querySelectorAll(".training-score-select");
-  let earned = 0;
-  let max = 0;
+function updateTrainingEverything() {
+  const totals = calculateScoreTotals(".training-score-select", findTrainingQuestionById, "trainingQuestionId");
 
-  scoreEls.forEach(select => {
-    const questionId = select.dataset.trainingQuestionId;
-    const q = findTrainingQuestionById(questionId);
-    if (!q) return;
+  setText(formazioneDom.trainingEarnedPoints, totals.earned.toString());
+  setText(formazioneDom.trainingMaxPoints, totals.max.toString());
+  setText(formazioneDom.trainingPercentageValue, `${totals.percentage}%`);
+  setText(formazioneDom.trainingCompletionValue, `${totals.completed}/${totals.total}`);
+  setProgress(formazioneDom.trainingProgressBar, totals.completionPercentage);
+  setHelperText(formazioneDom.trainingMissingFields, describeTrainingMissingFields(totals));
 
-    earned += Number(select.value || 0);
-    max += Number(q.maxPoints || 0);
-  });
-
-  const percentage = max > 0 ? Math.round((earned / max) * 100) : 0;
-  return { earned, max, percentage };
+  if (formazioneDom.trainingFinalSummary) {
+    formazioneDom.trainingFinalSummary.value = buildTrainingFinalSummary(totals);
+  }
 }
 
 function findTrainingQuestionById(id) {
-  for (const section of trainingQuestionsData) {
-    const found = section.questions.find(q => q.id === id);
-    if (found) return found;
-  }
-  return null;
+  return findQuestionById(trainingQuestionsData, id);
 }
 
-function buildTrainingFinalSummary() {
-  const dateValue = formazioneDom.trainingDate?.value
-    ? formatInputDateToIT(formazioneDom.trainingDate.value)
-    : formatDateIT(new Date());
+function describeTrainingMissingFields(totals) {
+  const missing = [];
 
-  const supervisorRaw = (formazioneDom.trainingSupervisorId?.value || "").trim();
-  const supervisorFormatted = supervisorRaw
-    ? `<@${supervisorRaw.replace(/[<@>]/g, "").trim()}>`
-    : "<@id discord>";
+  if (!getValue(formazioneDom.trainingDate)) missing.push("data");
+  if (!getValue(formazioneDom.trainingStartTime)) missing.push("inizio");
+  if (!getValue(formazioneDom.trainingEndTime)) missing.push("fine");
+  if (!getValue(formazioneDom.trainingSupervisorId)) missing.push("supervisore");
+  if (!getValue(formazioneDom.trainingParticipants)) missing.push("partecipanti");
+  if (totals.remaining > 0) missing.push(`${totals.remaining} punteggi`);
+
+  return missing.length
+    ? { text: `Da completare: ${missing.join(", ")}.`, complete: false }
+    : { text: "Modulo completo.", complete: true };
+}
+
+function buildTrainingFinalSummary(totals) {
+  const dateValue = getValue(formazioneDom.trainingDate)
+    ? formatInputDateToIT(getValue(formazioneDom.trainingDate))
+    : formatDateIT(new Date());
 
   return [
     `Data: ${dateValue}`,
-    `Orario inizio Formazione: ${formazioneDom.trainingStartTime?.value || ""}`,
-    `Orario fine Formazione: ${formazioneDom.trainingEndTime?.value || ""}`,
+    `Orario inizio Formazione: ${getValue(formazioneDom.trainingStartTime)}`,
+    `Orario fine Formazione: ${getValue(formazioneDom.trainingEndTime)}`,
     `Relatori: <@1084580275582931044>`,
-    `Supervisionato da (Istruttore/Gestore): ${supervisorFormatted}`,
-    `Nome cittadini partecipanti: ${normalizeParticipants(formazioneDom.trainingParticipants?.value || "")}`
+    `Supervisionato da (Istruttore/Gestore): ${formatDiscordMention(getValue(formazioneDom.trainingSupervisorId), "<@id discord>")}`,
+    `Punteggio formazione: ${totals.earned}/${totals.max}`,
+    `Valutazione formazione: ${totals.percentage}%`,
+    `Nome cittadini partecipanti: ${normalizeParticipants(getValue(formazioneDom.trainingParticipants))}`
   ].join("\n");
 }
 
 function normalizeParticipants(value) {
-  return value.trim();
+  return value
+    .split(/[\n,]+/)
+    .map(item => item.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
 function copyTrainingSummaryToClipboard() {
-  const text = formazioneDom.trainingFinalSummary?.value || "";
-  if (!text.trim()) {
-    alert("Nessun modulo da copiare.");
-    return;
-  }
+  copySummaryText(formazioneDom.trainingFinalSummary?.value || "");
+}
 
-  copyTextToClipboard(text)
-    .then(() => alert("Modulo finale copiato negli appunti."))
-    .catch(() => alert("Impossibile copiare automaticamente. Copialo manualmente dal riquadro."));
+function buildTrainingFilename() {
+  const date = getValue(formazioneDom.trainingDate) || formatDateFilePart(new Date());
+  return `modulo-formazione-${date}.txt`;
 }
 
 function saveTrainingState() {
   const payload = {
-    trainingDate: formazioneDom.trainingDate?.value || "",
-    trainingStartTime: formazioneDom.trainingStartTime?.value || "",
-    trainingEndTime: formazioneDom.trainingEndTime?.value || "",
-    trainingSupervisorId: formazioneDom.trainingSupervisorId?.value || "",
-    trainingParticipants: formazioneDom.trainingParticipants?.value || "",
-    scores: {},
-    notes: {}
+    schemaVersion: 2,
+    trainingDate: getValue(formazioneDom.trainingDate),
+    trainingStartTime: getValue(formazioneDom.trainingStartTime),
+    trainingEndTime: getValue(formazioneDom.trainingEndTime),
+    trainingSupervisorId: getValue(formazioneDom.trainingSupervisorId),
+    trainingParticipants: getValue(formazioneDom.trainingParticipants),
+    scores: collectValues(".training-score-select", "trainingQuestionId"),
+    notes: collectValues(".training-note-input", "trainingQuestionId")
   };
 
-  document.querySelectorAll(".training-score-select").forEach(select => {
-    payload.scores[select.dataset.trainingQuestionId] = select.value;
-  });
-
-  document.querySelectorAll(".training-note-input").forEach(input => {
-    payload.notes[input.dataset.trainingQuestionId] = input.value;
-  });
-
-  localStorage.setItem(FORMAZIONE_STORAGE_KEY, JSON.stringify(payload));
+  const saved = setStorageItem(FORMAZIONE_STORAGE_KEY, JSON.stringify(payload));
+  updateSaveStatus(formazioneDom.trainingSaveStatus, saved);
 }
 
 function loadTrainingSavedState() {
-  const raw = localStorage.getItem(FORMAZIONE_STORAGE_KEY);
-  if (!raw) return;
+  const data = readSavedJson(FORMAZIONE_STORAGE_KEY);
+  if (!data) return;
 
-  try {
-    const data = JSON.parse(raw);
-
-    if (formazioneDom.trainingDate) formazioneDom.trainingDate.value = data.trainingDate || "";
-    if (formazioneDom.trainingStartTime) formazioneDom.trainingStartTime.value = data.trainingStartTime || "";
-    if (formazioneDom.trainingEndTime) formazioneDom.trainingEndTime.value = data.trainingEndTime || "";
-    if (formazioneDom.trainingSupervisorId) formazioneDom.trainingSupervisorId.value = data.trainingSupervisorId || "";
-    if (formazioneDom.trainingParticipants) formazioneDom.trainingParticipants.value = data.trainingParticipants || "";
-
-    document.querySelectorAll(".training-score-select").forEach(select => {
-      const saved = data.scores?.[select.dataset.trainingQuestionId];
-      if (saved !== undefined) select.value = saved;
-    });
-
-    document.querySelectorAll(".training-note-input").forEach(input => {
-      const saved = data.notes?.[input.dataset.trainingQuestionId];
-      if (saved !== undefined) input.value = saved;
-    });
-  } catch (error) {
-    console.error("Errore nel caricamento del salvataggio formazione:", error);
-  }
+  setInputValue(formazioneDom.trainingDate, data.trainingDate);
+  setInputValue(formazioneDom.trainingStartTime, data.trainingStartTime);
+  setInputValue(formazioneDom.trainingEndTime, data.trainingEndTime);
+  setInputValue(formazioneDom.trainingSupervisorId, data.trainingSupervisorId);
+  setInputValue(formazioneDom.trainingParticipants, data.trainingParticipants);
+  restoreValues(".training-score-select", "trainingQuestionId", data.scores, { blankLegacyZero: data.schemaVersion !== 2 });
+  restoreValues(".training-note-input", "trainingQuestionId", data.notes);
 }
 
 function resetTraining() {
   const confirmReset = confirm("Vuoi davvero resettare completamente la formazione?");
   if (!confirmReset) return;
 
-  localStorage.removeItem(FORMAZIONE_STORAGE_KEY);
+  removeStorageItem(FORMAZIONE_STORAGE_KEY);
 
-  if (formazioneDom.trainingDate) formazioneDom.trainingDate.value = "";
-  if (formazioneDom.trainingStartTime) formazioneDom.trainingStartTime.value = "";
-  if (formazioneDom.trainingEndTime) formazioneDom.trainingEndTime.value = "";
-  if (formazioneDom.trainingSupervisorId) formazioneDom.trainingSupervisorId.value = "";
-  if (formazioneDom.trainingParticipants) formazioneDom.trainingParticipants.value = "";
+  [
+    formazioneDom.trainingDate,
+    formazioneDom.trainingStartTime,
+    formazioneDom.trainingEndTime,
+    formazioneDom.trainingSupervisorId,
+    formazioneDom.trainingParticipants
+  ].forEach(el => setInputValue(el, ""));
 
-  document.querySelectorAll(".training-score-select").forEach(select => {
-    select.value = "0";
-  });
-
-  document.querySelectorAll(".training-note-input").forEach(input => {
-    input.value = "";
+  document.querySelectorAll(".training-score-select, .training-note-input").forEach(el => {
+    el.value = "";
   });
 
   updateTrainingEverything();
+  updateSaveStatus(formazioneDom.trainingSaveStatus, true, "Reset completato");
+  showToast("Formazione resettata.", "success");
+}
+
+/* =========================
+   RENDER HELPERS
+========================= */
+
+function createSectionBlock(sectionData) {
+  const section = document.createElement("section");
+  section.className = "section-block";
+
+  const header = document.createElement("div");
+  header.className = "section-header";
+
+  const title = createTextElement("h3", "", sectionData.section);
+  const counter = createTextElement("span", "section-counter", `${sectionData.questions.length} voci`);
+  header.append(title, counter);
+
+  const inner = document.createElement("div");
+  inner.className = "section-inner";
+
+  section.append(header, inner);
+  return section;
+}
+
+function createQuestionCard({ question, scoreClass, noteClass, dataKey, noteLabel, withAnswer }) {
+  const card = document.createElement("article");
+  card.className = "question-card";
+
+  const titleId = `${scoreClass}-title-${question.id}`;
+  const top = document.createElement("div");
+  top.className = "question-top";
+
+  const title = createTextElement("h4", "question-title", question.title);
+  title.id = titleId;
+  const points = createTextElement("span", "points-badge", `Max ${question.maxPoints}`);
+  top.append(title, points);
+
+  const controls = document.createElement("div");
+  controls.className = "question-controls";
+
+  const select = createScoreSelect({
+    className: scoreClass,
+    dataKey,
+    question,
+    ariaLabel: `Punteggio per ${question.title}`
+  });
+  controls.appendChild(createFieldLabel("Punteggio assegnato", select));
+
+  const note = document.createElement("input");
+  note.type = "text";
+  note.className = noteClass;
+  note.placeholder = "Facoltativo...";
+  note.maxLength = 220;
+  note.dataset[dataKey] = question.id;
+  note.setAttribute("aria-label", `${noteLabel} per ${question.title}`);
+  controls.appendChild(createFieldLabel(noteLabel, note));
+
+  if (withAnswer) {
+    const answerId = `answer-${question.id}`;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-secondary toggle-answer-btn";
+    button.textContent = "Mostra risposta";
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", answerId);
+
+    const answer = createTextElement("div", "answer-box", question.answer || "");
+    answer.id = answerId;
+
+    button.addEventListener("click", () => {
+      const isOpen = answer.classList.toggle("open");
+      button.textContent = isOpen ? "Nascondi risposta" : "Mostra risposta";
+      button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    controls.appendChild(button);
+    card.append(top, controls, answer);
+  } else {
+    const spacer = document.createElement("span");
+    spacer.setAttribute("aria-hidden", "true");
+    controls.appendChild(spacer);
+    card.append(top, controls);
+  }
+
+  card.setAttribute("aria-labelledby", titleId);
+  return card;
+}
+
+function createScoreSelect({ className, dataKey, question, ariaLabel }) {
+  const select = document.createElement("select");
+  select.className = className;
+  select.dataset[dataKey] = question.id;
+  select.setAttribute("aria-label", ariaLabel);
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Da assegnare";
+  select.appendChild(placeholder);
+
+  for (let i = 0; i <= question.maxPoints; i++) {
+    const option = document.createElement("option");
+    option.value = String(i);
+    option.textContent = String(i);
+    select.appendChild(option);
+  }
+
+  return select;
+}
+
+function createFieldLabel(text, control) {
+  const label = document.createElement("label");
+  label.append(document.createTextNode(text), control);
+  return label;
+}
+
+function createTextElement(tagName, className, text) {
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  element.textContent = text;
+  return element;
+}
+
+function replaceChildren(parent, ...children) {
+  if (!parent) return;
+  parent.replaceChildren(...children);
 }
 
 /* =========================
    UTILS
 ========================= */
 
-function createOptions(max) {
-  let html = "";
-  for (let i = 0; i <= max; i++) {
-    html += `<option value="${i}">${i}</option>`;
+function calculateScoreTotals(selector, finder, dataKey) {
+  const scoreEls = document.querySelectorAll(selector);
+  let earned = 0;
+  let max = 0;
+  let completed = 0;
+
+  scoreEls.forEach(select => {
+    const question = finder(select.dataset[dataKey]);
+    if (!question) return;
+
+    max += Number(question.maxPoints || 0);
+
+    if (select.value !== "") {
+      completed += 1;
+      earned += Number(select.value || 0);
+    }
+  });
+
+  const total = scoreEls.length;
+  const remaining = Math.max(total - completed, 0);
+  const percentage = max > 0 ? Math.round((earned / max) * 100) : 0;
+  const completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { earned, max, completed, total, remaining, percentage, completionPercentage };
+}
+
+function findQuestionById(data, id) {
+  for (const section of data) {
+    const found = section.questions.find(q => q.id === id);
+    if (found) return found;
   }
-  return html;
+  return null;
+}
+
+function collectValues(selector, dataKey) {
+  const values = {};
+  document.querySelectorAll(selector).forEach(el => {
+    values[el.dataset[dataKey]] = el.value;
+  });
+  return values;
+}
+
+function restoreValues(selector, dataKey, values = {}, options = {}) {
+  document.querySelectorAll(selector).forEach(el => {
+    const saved = values?.[el.dataset[dataKey]];
+    if (saved === undefined) return;
+    el.value = options.blankLegacyZero && saved === "0" ? "" : saved;
+  });
+}
+
+function getValue(element) {
+  return (element?.value || "").trim();
+}
+
+function setInputValue(element, value = "") {
+  if (element) element.value = value || "";
+}
+
+function setText(element, text) {
+  if (element) element.textContent = text;
+}
+
+function setProgress(element, value) {
+  if (element) element.style.width = `${Math.max(0, Math.min(value, 100))}%`;
+}
+
+function setResultClass(element, status) {
+  if (!element) return;
+  element.classList.remove("result-positive", "result-negative", "result-pending");
+  element.classList.add(`result-${status}`);
+}
+
+function setHelperText(element, result) {
+  if (!element) return;
+  element.textContent = result.text;
+  element.classList.toggle("is-complete", Boolean(result.complete));
+}
+
+function updateSaveStatus(element, saved, overrideText = "") {
+  if (!element) return;
+  element.classList.toggle("is-ok", Boolean(saved));
+  element.classList.toggle("is-error", !saved);
+  element.textContent = overrideText || (saved ? `Salvato alle ${formatTimeIT(new Date())}` : "Salvataggio non disponibile");
+}
+
+function readSavedJson(key) {
+  const raw = getStorageItem(key);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Errore nel caricamento del salvataggio:", error);
+    return null;
+  }
+}
+
+function getStorageItem(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    console.error("LocalStorage non disponibile:", error);
+    return null;
+  }
+}
+
+function setStorageItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    console.error("LocalStorage non disponibile:", error);
+    return false;
+  }
+}
+
+function removeStorageItem(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error("LocalStorage non disponibile:", error);
+  }
 }
 
 function formatDateIT(date) {
@@ -824,11 +961,51 @@ function formatDateIT(date) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+function formatTimeIT(date) {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function formatDateFilePart(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function formatInputDateToIT(value) {
   if (!value) return "";
   const [yyyy, mm, dd] = value.split("-");
   if (!yyyy || !mm || !dd) return value;
   return `${dd}/${mm}/${yyyy}`;
+}
+
+function formatDiscordMention(value, placeholder) {
+  const id = value.replace(/\D/g, "");
+  return id ? `<@${id}>` : placeholder;
+}
+
+function slugify(value) {
+  const slug = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || "modulo";
+}
+
+function copySummaryText(text) {
+  if (!text.trim()) {
+    showToast("Nessun modulo da copiare.", "warning");
+    return;
+  }
+
+  copyTextToClipboard(text)
+    .then(() => showToast("Modulo copiato negli appunti.", "success"))
+    .catch(() => showToast("Copia automatica non riuscita. Usa il riquadro del modulo.", "error"));
 }
 
 function copyTextToClipboard(text) {
@@ -856,4 +1033,34 @@ function copyTextToClipboard(text) {
       reject(error);
     }
   });
+}
+
+function downloadTextFile(text, filename) {
+  if (!text.trim()) {
+    showToast("Nessun modulo da scaricare.", "warning");
+    return;
+  }
+
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast("File TXT generato.", "success");
+}
+
+function showToast(message, type = "success") {
+  const region = document.getElementById("toastRegion");
+  if (!region) return;
+
+  const toast = createTextElement("div", `toast is-${type}`, message);
+  region.appendChild(toast);
+
+  window.setTimeout(() => {
+    toast.remove();
+  }, 3200);
 }
