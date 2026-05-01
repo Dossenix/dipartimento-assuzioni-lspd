@@ -7,19 +7,19 @@ const questionsData = [
     questions: [
       {
         id: "q1",
-        title: "Durante un rapimento di un alto comando di una FDO quanti agenti e criminali possono intervenire?",
+        title: "Durante il rapimento di un alto comando FDO, quanti agenti e criminali possono intervenire?",
         maxPoints: 5,
         answer: "Alto comando: nessun limite di agenti. Criminali: massimo 15."
       },
       {
         id: "q2",
-        title: "Durante un rapimento di un agente: quanti poliziotti o criminali possono intervenire nell'azione?",
+        title: "Durante il rapimento di un agente non alto comando, quanti agenti e criminali possono intervenire?",
         maxPoints: 5,
         answer: "Agente non alto comando: massimo 20 agenti. Criminali: massimo 15."
       },
       {
         id: "q3",
-        title: "Quanto è il tempo massimo per intervenire in un 10-101 e quanti poliziotti e criminali possono intervenire nell'azione?",
+        title: "Qual è il tempo massimo di intervento in un 10-101 e quanti agenti e criminali possono partecipare?",
         maxPoints: 6,
         answer: "Nel 10-101 non c'è un tempo massimo di intervento. Possono intervenire massimo 20 agenti e massimo 15 criminali."
       }
@@ -36,19 +36,19 @@ const questionsData = [
       },
       {
         id: "q5",
-        title: "Quanto è il numero massimo di agenti che possono intervenire in un'azione freeroam?",
+        title: "Qual è il numero massimo di agenti ammessi in un'azione freeroam?",
         maxPoints: 3,
         answer: "Massimo 10 agenti."
       },
       {
         id: "q6",
-        title: "È concesso l'utilizzo di tetti nelle azioni freeroam?",
+        title: "È consentito utilizzare i tetti nelle azioni freeroam?",
         maxPoints: 2,
         answer: "No, i tetti non sono consentiti, a meno che siano raggiungibili fisicamente tramite scale o scale a pioli."
       },
       {
         id: "q7",
-        title: "Che tipo di armi sono autorizzate in queste azioni?",
+        title: "Quali armi sono autorizzate nelle azioni freeroam?",
         maxPoints: 3,
         answer: "Solo pistole a colpo singolo e giubbotti."
       }
@@ -59,67 +59,67 @@ const questionsData = [
     questions: [
       {
         id: "q8",
-        title: "In quanti agenti può essere startata una rapina FLEECA?",
+        title: "Con quanti agenti può essere avviata una rapina Fleeca?",
         maxPoints: 3,
-        answer: "Fleeca: fino a 4 agenti."
+        answer: "Fleeca: può essere avviata fino a 4 agenti."
       },
       {
         id: "q9",
-        title: "Quanti agenti e criminali possono essere massimi durante una rapina Fleeca?",
+        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Fleeca?",
         maxPoints: 4,
         answer: "Agenti: 4. Criminali: minimo 2, massimo 4."
       },
       {
         id: "q10",
-        title: "Quanti agenti e criminali possono essere massimi durante una rapina al Market?",
+        title: "Quali sono i limiti massimi di agenti e criminali in una rapina al Market?",
         maxPoints: 4,
         answer: "Market / Negozietto: agenti 2. Criminali massimo 2. Ostaggi 1."
       },
       {
         id: "q11",
-        title: "Quanti agenti e criminali possono essere massimi durante una Gabriella?",
+        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Gabriella?",
         maxPoints: 4,
         answer: "Gabriella: agenti 3. Criminali massimo 3. Ostaggi 1."
       },
       {
         id: "q12",
-        title: "Quanti agenti e criminali possono essere massimi durante una Pacific?",
+        title: "Quali sono i limiti massimi di agenti e criminali in una rapina Pacific?",
         maxPoints: 5,
         answer: "Pacific: agenti 12. Criminali minimo 6, massimo 10. Ostaggi 4."
       },
       {
         id: "q13",
-        title: "Si può utilizzare i caschi durante una fleeca?",
+        title: "Si possono utilizzare i caschi durante una rapina Fleeca?",
         maxPoints: 2,
         answer: "Sì, i caschetti sono consentiti."
       },
       {
         id: "q14",
-        title: "È possibile utilizzare i tetti durante una rapina al Market?",
+        title: "È consentito utilizzare i tetti durante una rapina al Market?",
         maxPoints: 2,
         answer: "No, non si possono usare i tetti vicini."
       },
       {
         id: "q15",
-        title: "Che tipo di armi sono concesse durante una rapina alla Fleeca?",
+        title: "Quali armi sono concesse durante una rapina Fleeca?",
         maxPoints: 3,
         answer: "Pistole a colpo singolo, P90, caschetti e giubbotti."
       },
       {
         id: "q16",
-        title: "Che tipo di armi sono concesse durante una rapina al Market?",
+        title: "Quali armi sono concesse durante una rapina al Market?",
         maxPoints: 3,
         answer: "Pistole a colpo singolo e giubbotti."
       },
       {
         id: "q17",
-        title: "Che tipo di armi sono concesse durante una Gabriella?",
+        title: "Quali armi sono concesse durante una rapina Gabriella?",
         maxPoints: 3,
         answer: "Pistole a colpo singolo e giubbotti."
       },
       {
         id: "q18",
-        title: "Che tipo di armi sono concesse durante una Pacific?",
+        title: "Quali armi sono concesse durante una rapina Pacific?",
         maxPoints: 4,
         answer: "Qualunque arma in dotazione, caschetti e giubbotti."
       }
@@ -130,8 +130,8 @@ const questionsData = [
     questions: [
       {
         id: "q19",
-        title: "Codici radio e significato",
-        maxPoints: 6,
+        title: "Elenca i principali codici radio e il loro significato.",
+        maxPoints: 7,
         answer: "Codici principali: 10-0 = Muto radio; 10-2 = Ricevuto male; 10-3 = Stop trasmissioni; 10-4 = Ricevuto; 10-5 = Ultimo messaggio; 10-7 = Fuori servizio; 10-8 = In servizio; 10-15 = Trasporto detenuto; 10-17 = Test sul veicolo; 10-19 = Disponibile in centrale; 10-20 = Posizione; 10-25 = Pericolo / urgenza; 10-40 = Ufficiale deceduto; 10-48 = Convergenza immediata; 10-50 = Incidente; 10-55 = Disturbo veicolare; 10-60 = Alterazione del traffico; 10-66 = Posto di blocco; 10-80 = Inseguimento; 10-99 = Ricercato; 10-100 = Richiesta rinforzi; 10-101 = Assalto alla centrale."
       }
     ]
@@ -141,7 +141,7 @@ const questionsData = [
     questions: [
       {
         id: "q20",
-        title: "Mi puoi dire tutti i codici status con il loro significato?",
+        title: "Elenca i codici status e il loro significato.",
         maxPoints: 6,
         answer: "Status 1 = pattuglia disponibile per direttive. Status 2 = pattuglia non disponibile per direttive. Status 3 = pattuglia in rifornimento / pausa cibo / riparazione veicolo."
       }
@@ -152,8 +152,8 @@ const questionsData = [
     questions: [
       {
         id: "q21",
-        title: "Miranda Warning?",
-        maxPoints: 8,
+        title: "Recita correttamente il Miranda Warning.",
+        maxPoints: 9,
         answer: "Formula di riferimento: Lei ha il diritto di rimanere in silenzio. Qualsiasi cosa dirà potrà essere usata contro di lei in tribunale. Ha il diritto di parlare con un avvocato e di averlo presente durante l'interrogatorio. Se non può permettersene uno, gliene sarà assegnato uno d'ufficio. Ha compreso i suoi diritti?"
       }
     ]
@@ -163,7 +163,7 @@ const questionsData = [
     questions: [
       {
         id: "q22",
-        title: "Quali sono le procedure da eseguire durante un inseguimento?",
+        title: "Quali procedure devono essere eseguite durante un inseguimento?",
         maxPoints: 6,
         answer: "Base di riferimento: 3 Alt distanziati di 10 secondi, oppure 5 Alt se il soggetto è in moto. Poi 10-80 con comunicazione in radio di posizione e veicolo. Si procede con le manovre consentite. Dopo 3 PIT, nei casi previsti, è possibile aprire il fuoco alle gomme."
       }
@@ -174,9 +174,9 @@ const questionsData = [
     questions: [
       {
         id: "q23",
-        title: "Quante manovre esistono e in cosa consistono?",
-        maxPoints: 8,
-        answer: "Le manovre principali sono 4: PIT, BOX, T e DOUBLE T."
+        title: "Quali sono le manovre principali e in cosa consistono?",
+        maxPoints: 9,
+        answer: "Le manovre principali sono 4: PIT, BOX, T e DOUBLE T. PIT: urto controllato per far perdere stabilità al veicolo. BOX: chiusura del veicolo tra più pattuglie. T: blocco con posizionamento a T. DOUBLE T: doppio blocco coordinato a T."
       }
     ]
   }
@@ -188,48 +188,48 @@ const trainingQuestionsData = [
     questions: [
       {
         id: "tq1",
-        title: "Compilazione dei vari moduli arresto, esito rapine, multe.",
+        title: "Compilazione dei moduli arresto, esito rapine e multe.",
         maxPoints: 5
       },
       {
         id: "tq2",
-        title: "Come utilizzare il canale #info.",
+        title: "Utilizzo corretto del canale #info.",
         maxPoints: 3
       },
       {
         id: "tq3",
-        title: "Cosa sono i gradi di allerta.",
+        title: "Spiegazione dei gradi di allerta.",
         maxPoints: 4
       },
       {
         id: "tq4",
-        title: "Quanto costano i vari servizi della polizia (Documenti e porto d'armi).",
+        title: "Costi dei servizi di polizia: documenti e porto d'armi.",
         maxPoints: 4
       },
       {
         id: "tq5",
-        title: "Cosa contiene la dotazione della polizia.",
+        title: "Contenuto della dotazione della polizia.",
         maxPoints: 4
       },
       {
         id: "tq6",
-        title: "Come effettuare arresti in game, fatture e come utilizzare il tablet.",
-        maxPoints: 6
+        title: "Arresti in game, fatture e utilizzo del tablet.",
+        maxPoints: 7
       },
       {
         id: "tq7",
-        title: "Cosa cambia tra modulo arresto e modulo richiesta processo.",
+        title: "Differenze tra modulo arresto e modulo richiesta processo.",
         maxPoints: 5
       },
       {
         id: "tq8",
-        title: "Come si effettua un test balistico, soldi sporchi e test sostanze stupefacenti. (Facoltativo)",
+        title: "Test balistico, soldi sporchi e test sostanze stupefacenti. (Facoltativo)",
         maxPoints: 3
       },
       {
         id: "tq9",
         title: "Domande finali a discrezione del formatore.",
-        maxPoints: 4
+        maxPoints: 5
       }
     ]
   }
