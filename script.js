@@ -3,30 +3,29 @@ const FORMAZIONE_STORAGE_KEY = "formazione_form_state_v1";
 const ISTRUTTORI_STORAGE_KEY = "istruttori_reparto_state_v1";
 
 const defaultInstructorsState = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   eventTitle: 'GESTIONE "EVENTO" ISTRUTTORI',
   eventDate: "2026-04-21",
-  weekOneLabel: "21/04 - 28/04",
-  weekTwoLabel: "28/04 - 05/05",
+  cycleLabel: "21/04 - 05/05",
   signature: "<@&1495402199965106227> <@1084580275582931044>\n<@&1071162374591098920> <@936696543241732127>",
   instructors: [
-    { id: "inst-mako", name: "Mako", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: false },
-    { id: "inst-como", name: "CoMo", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-los-angeles", name: "Los Angeles", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-edo", name: "Edo", weekOneTrainings: 6, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-dublino", name: "Dublino", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-tropea", name: "Tropea", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-phoenix", name: "Phoenix", weekOneTrainings: 5, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-cooper", name: "Cooper", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-mantova", name: "Mantova", weekOneTrainings: 4, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-erpupone", name: "ErPupone", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-esse-ferrari", name: "Esse Ferrari", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-shadow", name: "Shadow", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: false },
-    { id: "inst-marke", name: "Marke", weekOneTrainings: 4, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-sasy-verde", name: "Sasy Verde", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-price", name: "Price", weekOneTrainings: 2, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-light", name: "Light", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
-    { id: "inst-ohio", name: "Ohio", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true }
+    { id: "inst-mako", name: "Mako", trainings: 0, warnings: 0, active: false },
+    { id: "inst-como", name: "CoMo", trainings: 0, warnings: 0, active: true },
+    { id: "inst-los-angeles", name: "Los Angeles", trainings: 0, warnings: 0, active: true },
+    { id: "inst-edo", name: "Edo", trainings: 6, warnings: 0, active: true },
+    { id: "inst-dublino", name: "Dublino", trainings: 1, warnings: 0, active: true },
+    { id: "inst-tropea", name: "Tropea", trainings: 1, warnings: 0, active: true },
+    { id: "inst-phoenix", name: "Phoenix", trainings: 5, warnings: 0, active: true },
+    { id: "inst-cooper", name: "Cooper", trainings: 1, warnings: 0, active: true },
+    { id: "inst-mantova", name: "Mantova", trainings: 4, warnings: 0, active: true },
+    { id: "inst-erpupone", name: "ErPupone", trainings: 0, warnings: 0, active: true },
+    { id: "inst-esse-ferrari", name: "Esse Ferrari", trainings: 0, warnings: 0, active: true },
+    { id: "inst-shadow", name: "Shadow", trainings: 0, warnings: 0, active: false },
+    { id: "inst-marke", name: "Marke", trainings: 4, warnings: 0, active: true },
+    { id: "inst-sasy-verde", name: "Sasy Verde", trainings: 1, warnings: 0, active: true },
+    { id: "inst-price", name: "Price", trainings: 2, warnings: 0, active: true },
+    { id: "inst-light", name: "Light", trainings: 1, warnings: 0, active: true },
+    { id: "inst-ohio", name: "Ohio", trainings: 1, warnings: 0, active: true }
   ],
   movements: []
 };
@@ -837,8 +836,7 @@ let instructorsState = null;
 const istruttoriDom = {
   eventTitle: document.getElementById("instructorsEventTitle"),
   eventDate: document.getElementById("instructorsEventDate"),
-  weekOne: document.getElementById("instructorsWeekOne"),
-  weekTwo: document.getElementById("instructorsWeekTwo"),
+  cycleLabel: document.getElementById("instructorsCycleLabel"),
   signature: document.getElementById("instructorsSignature"),
   activeCount: document.getElementById("instructorsActiveCount"),
   trainingCount: document.getElementById("instructorsTrainingCount"),
@@ -851,7 +849,6 @@ const istruttoriDom = {
   movementType: document.getElementById("movementType"),
   movementInstructor: document.getElementById("movementInstructor"),
   movementName: document.getElementById("movementName"),
-  movementWeek: document.getElementById("movementWeek"),
   movementReason: document.getElementById("movementReason"),
   registerMovementBtn: document.getElementById("registerMovementBtn"),
   newInstructorName: document.getElementById("newInstructorName"),
@@ -881,12 +878,19 @@ function loadInstructorsState() {
   const saved = readSavedJson(ISTRUTTORI_STORAGE_KEY);
   if (!saved) return cloneDefaultInstructorsState();
 
+  const savedState = { ...saved };
+  delete savedState.weekOneLabel;
+  delete savedState.weekTwoLabel;
+  const defaults = cloneDefaultInstructorsState();
+
   return {
-    ...cloneDefaultInstructorsState(),
-    ...saved,
+    ...defaults,
+    ...savedState,
+    schemaVersion: defaults.schemaVersion,
+    cycleLabel: resolveInstructorCycleLabel(saved),
     instructors: Array.isArray(saved.instructors)
       ? saved.instructors.map(normalizeInstructorRecord)
-      : cloneDefaultInstructorsState().instructors,
+      : defaults.instructors,
     movements: Array.isArray(saved.movements) ? saved.movements : []
   };
 }
@@ -895,12 +899,27 @@ function cloneDefaultInstructorsState() {
   return JSON.parse(JSON.stringify(defaultInstructorsState));
 }
 
+function resolveInstructorCycleLabel(source) {
+  if (source.cycleLabel) return source.cycleLabel;
+
+  const weekOne = source.weekOneLabel || "";
+  const weekTwo = source.weekTwoLabel || "";
+  const cycleStart = String(weekOne).split("-")[0]?.trim();
+  const cycleEnd = String(weekTwo).split("-").pop()?.trim();
+
+  if (cycleStart && cycleEnd) return `${cycleStart} - ${cycleEnd}`;
+  return [weekOne, weekTwo].filter(Boolean).join(" - ") || cloneDefaultInstructorsState().cycleLabel;
+}
+
 function normalizeInstructorRecord(record) {
+  const trainings = record.trainings === undefined
+    ? toNonNegativeInt(record.weekOneTrainings) + toNonNegativeInt(record.weekTwoTrainings)
+    : toNonNegativeInt(record.trainings);
+
   return {
     id: record.id || buildInstructorId(record.name || "istruttore"),
     name: record.name || "Istruttore",
-    weekOneTrainings: toNonNegativeInt(record.weekOneTrainings),
-    weekTwoTrainings: toNonNegativeInt(record.weekTwoTrainings),
+    trainings,
     warnings: toNonNegativeInt(record.warnings),
     active: record.active !== false
   };
@@ -909,8 +928,7 @@ function normalizeInstructorRecord(record) {
 function hydrateIstruttoriForm() {
   setInputValue(istruttoriDom.eventTitle, instructorsState.eventTitle);
   setInputValue(istruttoriDom.eventDate, instructorsState.eventDate);
-  setInputValue(istruttoriDom.weekOne, instructorsState.weekOneLabel);
-  setInputValue(istruttoriDom.weekTwo, instructorsState.weekTwoLabel);
+  setInputValue(istruttoriDom.cycleLabel, instructorsState.cycleLabel);
   setInputValue(istruttoriDom.signature, instructorsState.signature);
 }
 
@@ -918,8 +936,7 @@ function attachIstruttoriListeners() {
   [
     istruttoriDom.eventTitle,
     istruttoriDom.eventDate,
-    istruttoriDom.weekOne,
-    istruttoriDom.weekTwo,
+    istruttoriDom.cycleLabel,
     istruttoriDom.signature
   ].forEach(el => {
     if (!el) return;
@@ -953,8 +970,7 @@ function attachIstruttoriListeners() {
 function handleIstruttoriSettingsInput() {
   instructorsState.eventTitle = getValue(istruttoriDom.eventTitle);
   instructorsState.eventDate = getValue(istruttoriDom.eventDate);
-  instructorsState.weekOneLabel = getValue(istruttoriDom.weekOne);
-  instructorsState.weekTwoLabel = getValue(istruttoriDom.weekTwo);
+  instructorsState.cycleLabel = getValue(istruttoriDom.cycleLabel);
   instructorsState.signature = getValue(istruttoriDom.signature);
 
   updateIstruttoriEverything();
@@ -981,7 +997,6 @@ function registerInstructorMovement() {
   const type = getValue(istruttoriDom.movementType) || "addestramento";
   const selectedId = getValue(istruttoriDom.movementInstructor);
   const typedName = getValue(istruttoriDom.movementName);
-  const weekKey = getValue(istruttoriDom.movementWeek) || "weekOneTrainings";
   const reason = getValue(istruttoriDom.movementReason);
   let instructor = selectedId ? findInstructorById(selectedId) : null;
 
@@ -995,7 +1010,7 @@ function registerInstructorMovement() {
   }
 
   if (type === "addestramento") {
-    instructor[weekKey] = toNonNegativeInt(instructor[weekKey]) + 1;
+    instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
   }
 
   if (type === "ammonimento") {
@@ -1015,7 +1030,6 @@ function registerInstructorMovement() {
     type,
     instructorId: instructor.id,
     instructorName: instructor.name,
-    weekKey,
     reason,
     date: formatDateFilePart(new Date())
   });
@@ -1040,12 +1054,8 @@ function handleInstructorRowInput(event) {
     renderMovementInstructorOptions();
   }
 
-  if (target.classList.contains("instructor-week-one-input")) {
-    instructor.weekOneTrainings = toNonNegativeInt(target.value);
-  }
-
-  if (target.classList.contains("instructor-week-two-input")) {
-    instructor.weekTwoTrainings = toNonNegativeInt(target.value);
+  if (target.classList.contains("instructor-training-input")) {
+    instructor.trainings = toNonNegativeInt(target.value);
   }
 
   if (target.classList.contains("instructor-warning-input")) {
@@ -1133,8 +1143,7 @@ function createInstructorRow(instructor) {
   nameInput.dataset.instructorId = instructor.id;
   nameInput.maxLength = 80;
 
-  const weekOneInput = createInstructorNumberInput(instructor, "weekOneTrainings", "instructor-week-one-input");
-  const weekTwoInput = createInstructorNumberInput(instructor, "weekTwoTrainings", "instructor-week-two-input");
+  const trainingInput = createInstructorNumberInput(instructor, "trainings", "instructor-training-input");
   const warningInput = createInstructorNumberInput(instructor, "warnings", "instructor-warning-input");
   const score = createTextElement("strong", "score-chip", `${calculateInstructorPoints(instructor)} pp`);
   score.dataset.scoreInstructorId = instructor.id;
@@ -1149,8 +1158,7 @@ function createInstructorRow(instructor) {
   row.append(
     activeLabel,
     createFieldLabel("Nome", nameInput),
-    createFieldLabel("Sett. 1", weekOneInput),
-    createFieldLabel("Sett. 2", weekTwoInput),
+    createFieldLabel("Add.", trainingInput),
     createFieldLabel("Amm.", warningInput),
     score,
     quickActions,
@@ -1164,8 +1172,7 @@ function createInstructorQuickActions(instructor) {
   const wrapper = document.createElement("div");
   wrapper.className = "quick-actions";
   wrapper.append(
-    createQuickActionButton(instructor.id, "weekOneTrainings", "+S1"),
-    createQuickActionButton(instructor.id, "weekTwoTrainings", "+S2"),
+    createQuickActionButton(instructor.id, "training", "+1"),
     createQuickActionButton(instructor.id, "warning", "-2")
   );
   return wrapper;
@@ -1187,8 +1194,8 @@ function applyInstructorQuickAction(instructorId, action) {
 
   if (action === "warning") {
     instructor.warnings = toNonNegativeInt(instructor.warnings) + 1;
-  } else if (["weekOneTrainings", "weekTwoTrainings"].includes(action)) {
-    instructor[action] = toNonNegativeInt(instructor[action]) + 1;
+  } else if (action === "training") {
+    instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
   }
 
   instructorsState.movements.unshift({
@@ -1196,7 +1203,6 @@ function applyInstructorQuickAction(instructorId, action) {
     type: action === "warning" ? "ammonimento" : "addestramento",
     instructorId: instructor.id,
     instructorName: instructor.name,
-    weekKey: action === "warning" ? "" : action,
     reason: "Azione rapida",
     date: formatDateFilePart(new Date())
   });
@@ -1277,7 +1283,7 @@ function calculateInstructorsStats() {
     movementCount,
     topLabel,
     helper: instructors.length
-      ? { text: "Ciclo da 2 settimane: entra in inattività solo chi chiude entrambe le settimane a 0 addestramenti.", complete: true }
+      ? { text: "Ciclo da 2 settimane: entra in inattività chi chiude il ciclo a 0 addestramenti.", complete: true }
       : { text: "Aggiungi almeno un istruttore per generare il report.", complete: false }
   };
 }
@@ -1287,8 +1293,7 @@ function buildInstructorsReport() {
   const eventDate = instructorsState.eventDate
     ? formatInputDateToIT(instructorsState.eventDate)
     : formatDateIT(new Date());
-  const weekOne = instructorsState.weekOneLabel || "settimana 1";
-  const weekTwo = instructorsState.weekTwoLabel || "settimana 2";
+  const cycleLabel = formatCycleLabel();
   const lines = [
     `# ${title} ANNUNCIATO IL GIORNO ${eventDate}`,
     "",
@@ -1320,7 +1325,7 @@ function buildInstructorsReport() {
     `> Ammonimenti assegnati: ${instructorsState.instructors.reduce((total, instructor) => total + toNonNegativeInt(instructor.warnings), 0)}`,
     `> Inattivi ciclo 2 settimane: ${formatCycleInactiveList()}`,
     "",
-    `**Inattività ciclo 2 settimane (${weekOne} / ${weekTwo}):**`,
+    `**Inattività ciclo 2 settimane (${cycleLabel}):**`,
     `> ${formatCycleInactiveList()}`,
     "",
     "**Assunzioni reparto:**",
@@ -1379,9 +1384,7 @@ function getCycleInactiveInstructors() {
 }
 
 function formatCycleLabel() {
-  const weekOne = instructorsState.weekOneLabel || "settimana 1";
-  const weekTwo = instructorsState.weekTwoLabel || "settimana 2";
-  return `${weekOne} / ${weekTwo}`;
+  return instructorsState.cycleLabel || "ciclo corrente";
 }
 
 function formatMovementGroup(type) {
@@ -1402,10 +1405,7 @@ function formatMovementReportLine(movement) {
   if (movement.type === "rimozione") return `${date} - Rimozione: ${name}${reason}`;
   if (movement.type === "ammonimento") return `${date} - Ammonimento: ${name} (-2 pp)${reason}`;
 
-  const week = movement.weekKey === "weekTwoTrainings"
-    ? (instructorsState.weekTwoLabel || "settimana 2")
-    : (instructorsState.weekOneLabel || "settimana 1");
-  return `${date} - Addestramento svolto: ${name} (+1 pp, ${week})${reason}`;
+  return `${date} - Addestramento svolto: ${name} (+1 pp)${reason}`;
 }
 
 function getInstructorTopGroups() {
@@ -1454,7 +1454,7 @@ function calculateInstructorPoints(instructor) {
 }
 
 function getInstructorTrainingTotal(instructor) {
-  return toNonNegativeInt(instructor.weekOneTrainings) + toNonNegativeInt(instructor.weekTwoTrainings);
+  return toNonNegativeInt(instructor.trainings);
 }
 
 function toNonNegativeInt(value) {
@@ -1497,9 +1497,15 @@ function importInstructorsData(event) {
         throw new Error("Il file non contiene un registro istruttori valido.");
       }
 
+      const parsedState = { ...parsed };
+      delete parsedState.weekOneLabel;
+      delete parsedState.weekTwoLabel;
+      const defaults = cloneDefaultInstructorsState();
       instructorsState = {
-        ...cloneDefaultInstructorsState(),
-        ...parsed,
+        ...defaults,
+        ...parsedState,
+        schemaVersion: defaults.schemaVersion,
+        cycleLabel: resolveInstructorCycleLabel(parsed),
         instructors: parsed.instructors.map(normalizeInstructorRecord),
         movements: Array.isArray(parsed.movements) ? parsed.movements : []
       };
@@ -1526,8 +1532,7 @@ function startNewInstructorsCycle() {
   instructorsState.eventDate = formatDateFilePart(new Date());
   instructorsState.instructors = instructorsState.instructors.map(instructor => ({
     ...instructor,
-    weekOneTrainings: 0,
-    weekTwoTrainings: 0,
+    trainings: 0,
     warnings: 0
   }));
   instructorsState.movements = [];
