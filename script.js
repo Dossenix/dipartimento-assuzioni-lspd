@@ -1,5 +1,35 @@
 const COLLOQUIO_STORAGE_KEY = "colloquio_form_state_v1";
 const FORMAZIONE_STORAGE_KEY = "formazione_form_state_v1";
+const ISTRUTTORI_STORAGE_KEY = "istruttori_reparto_state_v1";
+
+const defaultInstructorsState = {
+  schemaVersion: 1,
+  eventTitle: 'GESTIONE "EVENTO" ISTRUTTORI',
+  eventDate: "2026-04-21",
+  weekOneLabel: "21/04 - 28/04",
+  weekTwoLabel: "28/04 - 05/05",
+  signature: "<@&1495402199965106227> <@1084580275582931044>\n<@&1071162374591098920> <@936696543241732127>",
+  instructors: [
+    { id: "inst-mako", name: "Mako", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: false },
+    { id: "inst-como", name: "CoMo", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-los-angeles", name: "Los Angeles", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-edo", name: "Edo", weekOneTrainings: 6, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-dublino", name: "Dublino", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-tropea", name: "Tropea", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-phoenix", name: "Phoenix", weekOneTrainings: 5, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-cooper", name: "Cooper", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-mantova", name: "Mantova", weekOneTrainings: 4, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-erpupone", name: "ErPupone", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-esse-ferrari", name: "Esse Ferrari", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-shadow", name: "Shadow", weekOneTrainings: 0, weekTwoTrainings: 0, warnings: 0, active: false },
+    { id: "inst-marke", name: "Marke", weekOneTrainings: 4, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-sasy-verde", name: "Sasy Verde", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-price", name: "Price", weekOneTrainings: 2, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-light", name: "Light", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true },
+    { id: "inst-ohio", name: "Ohio", weekOneTrainings: 1, weekTwoTrainings: 0, warnings: 0, active: true }
+  ],
+  movements: []
+};
 
 const questionsData = [
   {
@@ -227,6 +257,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (document.getElementById("trainingQuestionsContainer")) {
     initFormazione();
+  }
+
+  if (document.getElementById("instructorsContainer")) {
+    initIstruttori();
   }
 });
 
@@ -792,6 +826,557 @@ function resetTraining() {
   updateTrainingEverything();
   updateSaveStatus(formazioneDom.trainingSaveStatus, true, "Reset completato");
   showToast("Formazione resettata.", "success");
+}
+
+/* =========================
+   ISTRUTTORI
+========================= */
+
+let instructorsState = null;
+
+const istruttoriDom = {
+  eventTitle: document.getElementById("instructorsEventTitle"),
+  eventDate: document.getElementById("instructorsEventDate"),
+  weekOne: document.getElementById("instructorsWeekOne"),
+  weekTwo: document.getElementById("instructorsWeekTwo"),
+  signature: document.getElementById("instructorsSignature"),
+  activeCount: document.getElementById("instructorsActiveCount"),
+  trainingCount: document.getElementById("instructorsTrainingCount"),
+  warningCount: document.getElementById("instructorsWarningCount"),
+  topValue: document.getElementById("instructorsTopValue"),
+  helperText: document.getElementById("instructorsHelperText"),
+  saveStatus: document.getElementById("instructorsSaveStatus"),
+  movementType: document.getElementById("movementType"),
+  movementInstructor: document.getElementById("movementInstructor"),
+  movementName: document.getElementById("movementName"),
+  movementWeek: document.getElementById("movementWeek"),
+  movementReason: document.getElementById("movementReason"),
+  registerMovementBtn: document.getElementById("registerMovementBtn"),
+  newInstructorName: document.getElementById("newInstructorName"),
+  addInstructorBtn: document.getElementById("addInstructorBtn"),
+  instructorsContainer: document.getElementById("instructorsContainer"),
+  finalReport: document.getElementById("instructorsFinalReport"),
+  copyReportBtn: document.getElementById("copyInstructorsReportBtn"),
+  downloadReportBtn: document.getElementById("downloadInstructorsReportBtn"),
+  resetBtn: document.getElementById("resetInstructorsBtn")
+};
+
+function initIstruttori() {
+  instructorsState = loadInstructorsState();
+  hydrateIstruttoriForm();
+  renderInstructors();
+  renderMovementInstructorOptions();
+  attachIstruttoriListeners();
+  updateIstruttoriEverything();
+}
+
+function loadInstructorsState() {
+  const saved = readSavedJson(ISTRUTTORI_STORAGE_KEY);
+  if (!saved) return cloneDefaultInstructorsState();
+
+  return {
+    ...cloneDefaultInstructorsState(),
+    ...saved,
+    instructors: Array.isArray(saved.instructors)
+      ? saved.instructors.map(normalizeInstructorRecord)
+      : cloneDefaultInstructorsState().instructors,
+    movements: Array.isArray(saved.movements) ? saved.movements : []
+  };
+}
+
+function cloneDefaultInstructorsState() {
+  return JSON.parse(JSON.stringify(defaultInstructorsState));
+}
+
+function normalizeInstructorRecord(record) {
+  return {
+    id: record.id || buildInstructorId(record.name || "istruttore"),
+    name: record.name || "Istruttore",
+    weekOneTrainings: toNonNegativeInt(record.weekOneTrainings),
+    weekTwoTrainings: toNonNegativeInt(record.weekTwoTrainings),
+    warnings: toNonNegativeInt(record.warnings),
+    active: record.active !== false
+  };
+}
+
+function hydrateIstruttoriForm() {
+  setInputValue(istruttoriDom.eventTitle, instructorsState.eventTitle);
+  setInputValue(istruttoriDom.eventDate, instructorsState.eventDate);
+  setInputValue(istruttoriDom.weekOne, instructorsState.weekOneLabel);
+  setInputValue(istruttoriDom.weekTwo, instructorsState.weekTwoLabel);
+  setInputValue(istruttoriDom.signature, instructorsState.signature);
+}
+
+function attachIstruttoriListeners() {
+  [
+    istruttoriDom.eventTitle,
+    istruttoriDom.eventDate,
+    istruttoriDom.weekOne,
+    istruttoriDom.weekTwo,
+    istruttoriDom.signature
+  ].forEach(el => {
+    if (!el) return;
+    el.addEventListener("input", handleIstruttoriSettingsInput);
+    el.addEventListener("change", handleIstruttoriSettingsInput);
+  });
+
+  istruttoriDom.addInstructorBtn?.addEventListener("click", addInstructorFromInput);
+  istruttoriDom.newInstructorName?.addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    addInstructorFromInput();
+  });
+  istruttoriDom.registerMovementBtn?.addEventListener("click", registerInstructorMovement);
+  istruttoriDom.copyReportBtn?.addEventListener("click", () => copySummaryText(istruttoriDom.finalReport?.value || ""));
+  istruttoriDom.downloadReportBtn?.addEventListener("click", () => {
+    downloadTextFile(istruttoriDom.finalReport?.value || "", buildInstructorsFilename());
+  });
+  istruttoriDom.resetBtn?.addEventListener("click", resetInstructorsState);
+
+  istruttoriDom.instructorsContainer?.addEventListener("input", handleInstructorRowInput);
+  istruttoriDom.instructorsContainer?.addEventListener("change", handleInstructorRowInput);
+  istruttoriDom.instructorsContainer?.addEventListener("click", handleInstructorRowClick);
+}
+
+function handleIstruttoriSettingsInput() {
+  instructorsState.eventTitle = getValue(istruttoriDom.eventTitle);
+  instructorsState.eventDate = getValue(istruttoriDom.eventDate);
+  instructorsState.weekOneLabel = getValue(istruttoriDom.weekOne);
+  instructorsState.weekTwoLabel = getValue(istruttoriDom.weekTwo);
+  instructorsState.signature = getValue(istruttoriDom.signature);
+
+  updateIstruttoriEverything();
+  saveInstructorsState();
+}
+
+function addInstructorFromInput() {
+  const name = getValue(istruttoriDom.newInstructorName);
+  if (!name) {
+    showToast("Inserisci il nome dell'istruttore.", "warning");
+    return;
+  }
+
+  upsertInstructorByName(name, { active: true });
+  setInputValue(istruttoriDom.newInstructorName, "");
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  saveInstructorsState();
+  showToast("Istruttore aggiunto.", "success");
+}
+
+function registerInstructorMovement() {
+  const type = getValue(istruttoriDom.movementType) || "addestramento";
+  const selectedId = getValue(istruttoriDom.movementInstructor);
+  const typedName = getValue(istruttoriDom.movementName);
+  const weekKey = getValue(istruttoriDom.movementWeek) || "weekOneTrainings";
+  const reason = getValue(istruttoriDom.movementReason);
+  let instructor = selectedId ? findInstructorById(selectedId) : null;
+
+  if (!instructor && typedName) {
+    instructor = upsertInstructorByName(typedName, { active: true });
+  }
+
+  if (!instructor) {
+    showToast("Seleziona o scrivi un istruttore.", "warning");
+    return;
+  }
+
+  if (type === "addestramento") {
+    instructor[weekKey] = toNonNegativeInt(instructor[weekKey]) + 1;
+  }
+
+  if (type === "ammonimento") {
+    instructor.warnings = toNonNegativeInt(instructor.warnings) + 1;
+  }
+
+  if (type === "assunzione") {
+    instructor.active = true;
+  }
+
+  if (type === "rimozione") {
+    instructor.active = false;
+  }
+
+  instructorsState.movements.unshift({
+    id: buildMovementId(),
+    type,
+    instructorId: instructor.id,
+    instructorName: instructor.name,
+    weekKey,
+    reason,
+    date: formatDateFilePart(new Date())
+  });
+
+  instructorsState.movements = instructorsState.movements.slice(0, 12);
+  setInputValue(istruttoriDom.movementName, "");
+  setInputValue(istruttoriDom.movementReason, "");
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  saveInstructorsState();
+  showToast("Movimento registrato.", "success");
+}
+
+function handleInstructorRowInput(event) {
+  const target = event.target;
+  const instructor = findInstructorById(target.dataset.instructorId);
+  if (!instructor) return;
+
+  if (target.classList.contains("instructor-name-input")) {
+    instructor.name = target.value;
+    renderMovementInstructorOptions();
+  }
+
+  if (target.classList.contains("instructor-week-one-input")) {
+    instructor.weekOneTrainings = toNonNegativeInt(target.value);
+  }
+
+  if (target.classList.contains("instructor-week-two-input")) {
+    instructor.weekTwoTrainings = toNonNegativeInt(target.value);
+  }
+
+  if (target.classList.contains("instructor-warning-input")) {
+    instructor.warnings = toNonNegativeInt(target.value);
+  }
+
+  if (target.classList.contains("instructor-active-input")) {
+    instructor.active = target.checked;
+    const row = target.closest(".instructor-row");
+    row?.classList.toggle("is-inactive", !instructor.active);
+  }
+
+  updateInstructorScoreChip(instructor.id);
+  updateIstruttoriEverything();
+  saveInstructorsState();
+}
+
+function handleInstructorRowClick(event) {
+  const button = event.target.closest("[data-remove-instructor-id]");
+  if (!button) return;
+
+  const instructor = findInstructorById(button.dataset.removeInstructorId);
+  if (!instructor) return;
+
+  const confirmRemove = confirm(`Vuoi rimuovere ${instructor.name} dal registro?`);
+  if (!confirmRemove) return;
+
+  instructorsState.instructors = instructorsState.instructors.filter(item => item.id !== instructor.id);
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  saveInstructorsState();
+  showToast("Istruttore rimosso dal registro.", "success");
+}
+
+function renderInstructors() {
+  replaceChildren(istruttoriDom.instructorsContainer);
+  if (!istruttoriDom.instructorsContainer) return;
+
+  if (!instructorsState.instructors.length) {
+    istruttoriDom.instructorsContainer.appendChild(createTextElement("p", "helper-text", "Nessun istruttore inserito."));
+    return;
+  }
+
+  instructorsState.instructors.forEach(instructor => {
+    istruttoriDom.instructorsContainer.appendChild(createInstructorRow(instructor));
+  });
+}
+
+function createInstructorRow(instructor) {
+  const row = document.createElement("article");
+  row.className = `instructor-row${instructor.active ? "" : " is-inactive"}`;
+
+  const activeInput = document.createElement("input");
+  activeInput.type = "checkbox";
+  activeInput.checked = Boolean(instructor.active);
+  activeInput.className = "instructor-active-input";
+  activeInput.dataset.instructorId = instructor.id;
+  const activeLabel = createFieldLabel("Attivo", activeInput);
+  activeLabel.className = "check-row";
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.value = instructor.name;
+  nameInput.className = "instructor-name-input";
+  nameInput.dataset.instructorId = instructor.id;
+  nameInput.maxLength = 80;
+
+  const weekOneInput = createInstructorNumberInput(instructor, "weekOneTrainings", "instructor-week-one-input");
+  const weekTwoInput = createInstructorNumberInput(instructor, "weekTwoTrainings", "instructor-week-two-input");
+  const warningInput = createInstructorNumberInput(instructor, "warnings", "instructor-warning-input");
+  const score = createTextElement("strong", "score-chip", `${calculateInstructorPoints(instructor)} pp`);
+  score.dataset.scoreInstructorId = instructor.id;
+
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "btn btn-danger btn-small";
+  removeButton.dataset.removeInstructorId = instructor.id;
+  removeButton.textContent = "Elimina";
+
+  row.append(
+    activeLabel,
+    createFieldLabel("Nome", nameInput),
+    createFieldLabel("Sett. 1", weekOneInput),
+    createFieldLabel("Sett. 2", weekTwoInput),
+    createFieldLabel("Amm.", warningInput),
+    score,
+    removeButton
+  );
+
+  return row;
+}
+
+function createInstructorNumberInput(instructor, key, className) {
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "0";
+  input.step = "1";
+  input.value = String(toNonNegativeInt(instructor[key]));
+  input.className = className;
+  input.dataset.instructorId = instructor.id;
+  return input;
+}
+
+function renderMovementInstructorOptions() {
+  if (!istruttoriDom.movementInstructor) return;
+
+  const previous = istruttoriDom.movementInstructor.value;
+  replaceChildren(istruttoriDom.movementInstructor);
+  istruttoriDom.movementInstructor.appendChild(createOption("", "Seleziona istruttore"));
+
+  instructorsState.instructors.forEach(instructor => {
+    istruttoriDom.movementInstructor.appendChild(createOption(instructor.id, instructor.name));
+  });
+
+  if (findInstructorById(previous)) {
+    istruttoriDom.movementInstructor.value = previous;
+  }
+}
+
+function updateInstructorScoreChip(instructorId) {
+  const instructor = findInstructorById(instructorId);
+  const chip = document.querySelector(`[data-score-instructor-id="${instructorId}"]`);
+  if (instructor && chip) chip.textContent = `${calculateInstructorPoints(instructor)} pp`;
+}
+
+function updateIstruttoriEverything() {
+  const stats = calculateInstructorsStats();
+  setText(istruttoriDom.activeCount, `${stats.activeCount} attivi`);
+  setText(istruttoriDom.trainingCount, String(stats.trainings));
+  setText(istruttoriDom.warningCount, String(stats.warnings));
+  setText(istruttoriDom.topValue, stats.topLabel);
+  setHelperText(istruttoriDom.helperText, stats.helper);
+
+  if (istruttoriDom.finalReport) {
+    istruttoriDom.finalReport.value = buildInstructorsReport();
+  }
+}
+
+function calculateInstructorsStats() {
+  const instructors = instructorsState.instructors;
+  const trainings = instructors.reduce((total, instructor) => total + getInstructorTrainingTotal(instructor), 0);
+  const warnings = instructors.reduce((total, instructor) => total + toNonNegativeInt(instructor.warnings), 0);
+  const activeCount = instructors.filter(instructor => instructor.active).length;
+  const topGroups = getInstructorTopGroups();
+  const topLabel = topGroups.length
+    ? topGroups.map(group => `${group.names.join(", ")} (${group.points} pp)`).join(" | ")
+    : "Da definire";
+
+  return {
+    trainings,
+    warnings,
+    activeCount,
+    topLabel,
+    helper: instructors.length
+      ? { text: "Formula: ogni addestramento svolto vale +1, ogni ammonimento vale -2.", complete: true }
+      : { text: "Aggiungi almeno un istruttore per generare il report.", complete: false }
+  };
+}
+
+function buildInstructorsReport() {
+  const title = (instructorsState.eventTitle || 'GESTIONE "EVENTO" ISTRUTTORI').toUpperCase();
+  const eventDate = instructorsState.eventDate
+    ? formatInputDateToIT(instructorsState.eventDate)
+    : formatDateIT(new Date());
+  const weekOne = instructorsState.weekOneLabel || "settimana 1";
+  const weekTwo = instructorsState.weekTwoLabel || "settimana 2";
+  const lines = [
+    `# ${title} ANNUNCIATO IL GIORNO ${eventDate}`,
+    "",
+    "**Lista agenti Istruttori:**",
+    ""
+  ];
+
+  if (!instructorsState.instructors.length) {
+    lines.push("> Nessun istruttore inserito.");
+  } else {
+    instructorsState.instructors.forEach(instructor => {
+      lines.push(`> ${formatInstructorReportLine(instructor)}`);
+    });
+  }
+
+  lines.push("", "**Attuali Vincitori:**");
+  const topGroups = getInstructorTopGroups();
+  if (!topGroups.length) {
+    lines.push("> Da definire");
+  } else {
+    ["Primo Classificato", "Secondo Classificato", "Terzo Classificato"].forEach((label, index) => {
+      if (!topGroups[index]) return;
+      lines.push(`> ${label}: ${topGroups[index].names.join(", ")}`);
+    });
+  }
+
+  lines.push(
+    "",
+    `**Persone che non hanno svolto addestramenti nella settimana ${weekOne}:**`,
+    `> ${formatZeroTrainingList("weekOneTrainings")}`,
+    "",
+    `**Persone che non hanno svolto addestramenti nella settimana ${weekTwo}:**`,
+    `> ${formatZeroTrainingList("weekTwoTrainings")}`,
+    "",
+    "**Movimenti reparto assunzioni:**"
+  );
+
+  if (!instructorsState.movements.length) {
+    lines.push("> Nessun movimento registrato.");
+  } else {
+    instructorsState.movements.forEach(movement => {
+      lines.push(`> ${formatMovementReportLine(movement)}`);
+    });
+  }
+
+  lines.push(
+    "",
+    "***Non svolgere colloqui comporterà il <@&959468486571216988> interno al dipartimento.***",
+    "***A seguito del <@&959468486571216986> procederemo con l'estromissione dal reparto se non sono inoltrate motivazioni valide.***",
+    "",
+    "*In fede,*",
+    instructorsState.signature || "<@&1495402199965106227>"
+  );
+
+  return lines.join("\n");
+}
+
+function formatInstructorReportLine(instructor) {
+  const text = `${instructor.name || "Istruttore"} - ${calculateInstructorPoints(instructor)} pp`;
+  return instructor.active ? text : `~~${text}~~`;
+}
+
+function formatZeroTrainingList(field) {
+  const names = instructorsState.instructors
+    .filter(instructor => toNonNegativeInt(instructor[field]) === 0)
+    .map(instructor => instructor.active ? instructor.name : `~~${instructor.name}~~`);
+
+  return names.length ? names.join(", ") : "\\";
+}
+
+function formatMovementReportLine(movement) {
+  const date = movement.date ? formatInputDateToIT(movement.date) : formatDateIT(new Date());
+  const name = movement.instructorName || "Istruttore";
+  const reason = movement.reason ? ` - ${movement.reason}` : "";
+
+  if (movement.type === "assunzione") return `${date} - Assunzione: ${name}${reason}`;
+  if (movement.type === "rimozione") return `${date} - Rimozione: ${name}${reason}`;
+  if (movement.type === "ammonimento") return `${date} - Ammonimento: ${name} (-2 pp)${reason}`;
+
+  const week = movement.weekKey === "weekTwoTrainings"
+    ? (instructorsState.weekTwoLabel || "settimana 2")
+    : (instructorsState.weekOneLabel || "settimana 1");
+  return `${date} - Addestramento svolto: ${name} (+1 pp, ${week})${reason}`;
+}
+
+function getInstructorTopGroups() {
+  const sorted = instructorsState.instructors
+    .filter(instructor => instructor.active)
+    .map(instructor => ({ name: instructor.name, points: calculateInstructorPoints(instructor) }))
+    .filter(item => item.points > 0)
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+
+  const groups = [];
+  sorted.forEach(item => {
+    let group = groups.find(existing => existing.points === item.points);
+    if (!group) {
+      group = { points: item.points, names: [] };
+      groups.push(group);
+    }
+    group.names.push(item.name);
+  });
+
+  return groups.slice(0, 3);
+}
+
+function upsertInstructorByName(name, defaults = {}) {
+  const normalizedName = name.trim();
+  const existing = instructorsState.instructors.find(instructor => instructor.name.toLowerCase() === normalizedName.toLowerCase());
+  if (existing) {
+    Object.assign(existing, defaults);
+    return existing;
+  }
+
+  const instructor = normalizeInstructorRecord({
+    id: buildInstructorId(normalizedName),
+    name: normalizedName,
+    ...defaults
+  });
+  instructorsState.instructors.push(instructor);
+  return instructor;
+}
+
+function findInstructorById(id) {
+  return instructorsState?.instructors.find(instructor => instructor.id === id) || null;
+}
+
+function calculateInstructorPoints(instructor) {
+  return getInstructorTrainingTotal(instructor) - (toNonNegativeInt(instructor.warnings) * 2);
+}
+
+function getInstructorTrainingTotal(instructor) {
+  return toNonNegativeInt(instructor.weekOneTrainings) + toNonNegativeInt(instructor.weekTwoTrainings);
+}
+
+function toNonNegativeInt(value) {
+  const number = Number.parseInt(value, 10);
+  return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
+function buildInstructorId(name) {
+  return `inst-${slugify(name)}-${Date.now().toString(36)}`;
+}
+
+function buildMovementId() {
+  return `mov-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function buildInstructorsFilename() {
+  const date = instructorsState.eventDate || formatDateFilePart(new Date());
+  return `report-istruttori-${date}.txt`;
+}
+
+function saveInstructorsState() {
+  const saved = setStorageItem(ISTRUTTORI_STORAGE_KEY, JSON.stringify(instructorsState));
+  updateSaveStatus(istruttoriDom.saveStatus, saved);
+}
+
+function resetInstructorsState() {
+  const confirmReset = confirm("Vuoi ripristinare il registro esempio degli istruttori?");
+  if (!confirmReset) return;
+
+  instructorsState = cloneDefaultInstructorsState();
+  removeStorageItem(ISTRUTTORI_STORAGE_KEY);
+  hydrateIstruttoriForm();
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  updateSaveStatus(istruttoriDom.saveStatus, true, "Reset completato");
+  showToast("Registro esempio ripristinato.", "success");
+}
+
+function createOption(value, text) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = text;
+  return option;
 }
 
 /* =========================

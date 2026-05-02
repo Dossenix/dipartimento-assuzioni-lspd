@@ -258,7 +258,7 @@ svg {
 
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -288,6 +288,10 @@ svg {
 
 .home-card-secondary::before {
   background: var(--gold);
+}
+
+.home-card-tertiary::before {
+  background: var(--blue);
 }
 
 .home-card:hover {
@@ -687,6 +691,83 @@ a:focus-visible {
   line-height: 1.65;
 }
 
+.summary-box-tall {
+  min-height: 430px;
+}
+
+.movement-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.movement-reason-field {
+  grid-column: span 2;
+}
+
+.instructors-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.instructor-list {
+  display: grid;
+  gap: 12px;
+}
+
+.instructor-row {
+  display: grid;
+  grid-template-columns: 120px minmax(160px, 1fr) repeat(3, minmax(92px, 0.55fr)) 92px auto;
+  gap: 10px;
+  align-items: end;
+  border: 1px solid rgba(244, 241, 232, 0.08);
+  border-radius: var(--radius);
+  background: #171c19;
+  padding: 12px;
+}
+
+.instructor-row.is-inactive {
+  opacity: 0.72;
+}
+
+.instructor-row.is-inactive input[type="text"] {
+  text-decoration: line-through;
+}
+
+.check-row {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+}
+
+.check-row input {
+  width: auto;
+}
+
+.score-chip {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(102, 209, 193, 0.26);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: #d6fff8;
+  padding: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.btn-small {
+  min-height: 44px;
+  padding: 9px 11px;
+}
+
 .rules-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -774,8 +855,15 @@ a:focus-visible {
 
 @media (max-width: 1060px) {
   .main-grid,
-  .rules-grid {
+  .rules-grid,
+  .home-grid,
+  .movement-grid,
+  .instructor-row {
     grid-template-columns: 1fr;
+  }
+
+  .movement-reason-field {
+    grid-column: auto;
   }
 
   .sticky-panel {
@@ -806,7 +894,8 @@ a:focus-visible {
   .home-grid,
   .home-strip,
   .form-grid.cols-2,
-  .stats-grid {
+  .stats-grid,
+  .instructors-toolbar {
     grid-template-columns: 1fr;
   }
 
