@@ -76,6 +76,16 @@ svg {
   display: block;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 .skip-link {
   position: fixed;
   left: 16px;
@@ -708,7 +718,7 @@ a:focus-visible {
 
 .instructors-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr) auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 14px;
@@ -721,7 +731,7 @@ a:focus-visible {
 
 .instructor-row {
   display: grid;
-  grid-template-columns: 120px minmax(160px, 1fr) repeat(3, minmax(92px, 0.55fr)) 92px auto;
+  grid-template-columns: 120px minmax(160px, 1fr) repeat(3, minmax(92px, 0.5fr)) 92px minmax(180px, 0.7fr) auto;
   gap: 10px;
   align-items: end;
   border: 1px solid rgba(244, 241, 232, 0.08);
@@ -760,6 +770,18 @@ a:focus-visible {
   color: #d6fff8;
   padding: 9px;
   font-weight: 900;
+  white-space: nowrap;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.quick-actions .btn {
+  min-height: 44px;
+  padding: 9px 8px;
   white-space: nowrap;
 }
 

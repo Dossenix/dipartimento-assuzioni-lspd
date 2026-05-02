@@ -22,6 +22,8 @@
       </a>
 
       <div class="topbar-actions">
+        <a class="ghost-link" href="colloquio.html">Colloquio</a>
+        <a class="ghost-link" href="formazione.html">Formazione</a>
         <a class="ghost-link" href="index.html">
           <span aria-hidden="true">&larr;</span>
           Home
@@ -92,6 +94,16 @@
               <strong id="instructorsWarningCount">0</strong>
             </div>
 
+            <div class="stat-card">
+              <span>Da richiamare</span>
+              <strong id="instructorsAttentionCount">0</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Movimenti</span>
+              <strong id="instructorsMovementCount">0</strong>
+            </div>
+
             <div class="stat-card stat-wide">
               <span>Podio attuale</span>
               <strong id="instructorsTopValue">Da definire</strong>
@@ -103,8 +115,11 @@
           <div class="side-actions">
             <button id="copyInstructorsReportBtn" class="btn btn-primary" type="button">Copia report</button>
             <button id="downloadInstructorsReportBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+            <button id="exportInstructorsDataBtn" class="btn btn-secondary" type="button">Esporta dati</button>
+            <button id="importInstructorsDataBtn" class="btn btn-secondary" type="button">Importa dati</button>
             <button id="resetInstructorsBtn" class="btn btn-danger" type="button">Reset esempio</button>
           </div>
+          <input id="importInstructorsFile" class="visually-hidden" type="file" accept="application/json,.json" />
 
           <p id="instructorsSaveStatus" class="save-status" aria-live="polite">Pronto</p>
         </div>
@@ -173,6 +188,12 @@
             Nuovo istruttore
             <input type="text" id="newInstructorName" placeholder="Nome istruttore" />
           </label>
+
+          <label for="instructorSearch">
+            Cerca
+            <input type="search" id="instructorSearch" placeholder="Filtra per nome" />
+          </label>
+
           <button id="addInstructorBtn" class="btn btn-secondary" type="button">Aggiungi istruttore</button>
         </div>
 
