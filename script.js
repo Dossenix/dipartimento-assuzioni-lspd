@@ -864,6 +864,7 @@ const istruttoriDom = {
   exportDataBtn: document.getElementById("exportInstructorsDataBtn"),
   importDataBtn: document.getElementById("importInstructorsDataBtn"),
   importFile: document.getElementById("importInstructorsFile"),
+  newCycleBtn: document.getElementById("newCycleInstructorsBtn"),
   resetBtn: document.getElementById("resetInstructorsBtn")
 };
 
@@ -941,6 +942,7 @@ function attachIstruttoriListeners() {
   istruttoriDom.exportDataBtn?.addEventListener("click", exportInstructorsData);
   istruttoriDom.importDataBtn?.addEventListener("click", () => istruttoriDom.importFile?.click());
   istruttoriDom.importFile?.addEventListener("change", importInstructorsData);
+  istruttoriDom.newCycleBtn?.addEventListener("click", startNewInstructorsCycle);
   istruttoriDom.resetBtn?.addEventListener("click", resetInstructorsState);
 
   istruttoriDom.instructorsContainer?.addEventListener("input", handleInstructorRowInput);
@@ -1260,11 +1262,11 @@ function calculateInstructorsStats() {
   const trainings = instructors.reduce((total, instructor) => total + getInstructorTrainingTotal(instructor), 0);
   const warnings = instructors.reduce((total, instructor) => total + toNonNegativeInt(instructor.warnings), 0);
   const activeCount = instructors.filter(instructor => instructor.active).length;
-  const attentionCount = getAttentionInstructors().length;
+  const attentionCount = getCycleInactiveInstructors().length;
   const movementCount = instructorsState.movements.length;
   const topGroups = getInstructorTopGroups();
   const topLabel = topGroups.length
-    ? topGroups.map(group => `${group.names.join(", ")} (${group.points} pp)`).join(" | ")
+    ? topGroups.map((group, index) => `${index + 1}° ${group.names.join(", ")} (${group.points} pp)`).join(" | ")
     : "Da definire";
 
   return {
@@ -1275,7 +1277,7 @@ function calculateInstructorsStats() {
     movementCount,
     topLabel,
     helper: instructors.length
-      ? { text: "Formula: ogni addestramento svolto vale +1, ogni ammonimento vale -2.", complete: true }
+      ? { text: "Ciclo da 2 settimane: entra in inattività solo chi chiude entrambe le settimane a 0 addestramenti.", complete: true }
       : { text: "Aggiungi almeno un istruttore per generare il report.", complete: false }
   };
 }
@@ -1302,15 +1304,12 @@ function buildInstructorsReport() {
     });
   }
 
-  lines.push("", "**Attuali Vincitori:**");
+  lines.push("", `**Vincitori attuali - miglior punteggio ciclo ${formatCycleLabel()}:**`);
   const topGroups = getInstructorTopGroups();
   if (!topGroups.length) {
     lines.push("> Da definire");
   } else {
-    ["Primo Classificato", "Secondo Classificato", "Terzo Classificato"].forEach((label, index) => {
-      if (!topGroups[index]) return;
-      lines.push(`> ${label}: ${topGroups[index].names.join(", ")}`);
-    });
+    lines.push(...formatWinnerReportLines(topGroups));
   }
 
   lines.push(
@@ -1319,13 +1318,10 @@ function buildInstructorsReport() {
     `> Istruttori attivi: ${instructorsState.instructors.filter(instructor => instructor.active).length}`,
     `> Addestramenti svolti: ${instructorsState.instructors.reduce((total, instructor) => total + getInstructorTrainingTotal(instructor), 0)}`,
     `> Ammonimenti assegnati: ${instructorsState.instructors.reduce((total, instructor) => total + toNonNegativeInt(instructor.warnings), 0)}`,
-    `> Da richiamare: ${formatAttentionList()}`,
+    `> Inattivi ciclo 2 settimane: ${formatCycleInactiveList()}`,
     "",
-    `**Persone che non hanno svolto addestramenti nella settimana ${weekOne}:**`,
-    `> ${formatZeroTrainingList("weekOneTrainings")}`,
-    "",
-    `**Persone che non hanno svolto addestramenti nella settimana ${weekTwo}:**`,
-    `> ${formatZeroTrainingList("weekTwoTrainings")}`,
+    `**Inattività ciclo 2 settimane (${weekOne} / ${weekTwo}):**`,
+    `> ${formatCycleInactiveList()}`,
     "",
     "**Assunzioni reparto:**",
     formatMovementGroup("assunzione"),
@@ -1359,28 +1355,33 @@ function getReportOrderedInstructors() {
   });
 }
 
+function formatWinnerReportLines(topGroups) {
+  const labels = ["Primo Classificato", "Secondo Classificato", "Terzo Classificato"];
+  return topGroups.slice(0, 3).map((group, index) => {
+    return `> ${labels[index]}: ${group.names.join(", ")} - ${group.points} pp`;
+  });
+}
+
 function formatInstructorReportLine(instructor) {
   const text = `${instructor.name || "Istruttore"} - ${calculateInstructorPoints(instructor)} pp`;
   return instructor.active ? text : `~~${text}~~`;
 }
 
-function formatZeroTrainingList(field) {
-  const names = instructorsState.instructors
-    .filter(instructor => toNonNegativeInt(instructor[field]) === 0)
+function formatCycleInactiveList() {
+  const names = getCycleInactiveInstructors()
     .map(instructor => instructor.active ? instructor.name : `~~${instructor.name}~~`);
-
   return names.length ? names.join(", ") : "\\";
 }
 
-function formatAttentionList() {
-  const names = getAttentionInstructors().map(instructor => instructor.name);
-  return names.length ? names.join(", ") : "\\";
-}
-
-function getAttentionInstructors() {
+function getCycleInactiveInstructors() {
   return instructorsState.instructors
-    .filter(instructor => instructor.active)
-    .filter(instructor => getInstructorTrainingTotal(instructor) === 0 || calculateInstructorPoints(instructor) < 0);
+    .filter(instructor => getInstructorTrainingTotal(instructor) === 0);
+}
+
+function formatCycleLabel() {
+  const weekOne = instructorsState.weekOneLabel || "settimana 1";
+  const weekTwo = instructorsState.weekTwoLabel || "settimana 2";
+  return `${weekOne} / ${weekTwo}`;
 }
 
 function formatMovementGroup(type) {
@@ -1516,6 +1517,27 @@ function importInstructorsData(event) {
     }
   });
   reader.readAsText(file);
+}
+
+function startNewInstructorsCycle() {
+  const confirmReset = confirm("Vuoi iniziare un nuovo ciclo da 2 settimane? Verranno azzerati addestramenti, ammonimenti e movimenti, mantenendo la lista istruttori.");
+  if (!confirmReset) return;
+
+  instructorsState.eventDate = formatDateFilePart(new Date());
+  instructorsState.instructors = instructorsState.instructors.map(instructor => ({
+    ...instructor,
+    weekOneTrainings: 0,
+    weekTwoTrainings: 0,
+    warnings: 0
+  }));
+  instructorsState.movements = [];
+
+  hydrateIstruttoriForm();
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  saveInstructorsState();
+  showToast("Nuovo ciclo da 2 settimane avviato.", "success");
 }
 
 function saveInstructorsState() {
