@@ -7,7 +7,7 @@ const questionsData = [
     questions: [
       {
         id: "q1",
-        maxPoints: 6,
+        maxPoints: 3,
         title: "Verifica iniziale: fedina penale pulita e porto d'armi valido.",
         answer: "Prima di iniziare il colloquio bisogna controllare fedina penale e porto d'armi. Se uno dei due controlli non è valido, il candidato è non idoneo e il colloquio può essere interrotto."
       }
@@ -18,7 +18,7 @@ const questionsData = [
     questions: [
       {
         id: "q2",
-        maxPoints: 6,
+        maxPoints: 5,
         title: "Rapimento alto comando FDO: numeri di agenti e criminali.",
         answer: "Alto comando: nessun limite di agenti. Criminali: massimo 15."
       },
@@ -30,7 +30,7 @@ const questionsData = [
       },
       {
         id: "q4",
-        maxPoints: 5,
+        maxPoints: 6,
         title: "10-101: tempo di intervento, numeri e limiti dell'azione.",
         answer: "Nel 10-101 non c'è un tempo massimo di intervento. Possono intervenire massimo 20 agenti e massimo 15 criminali."
       }
@@ -47,7 +47,7 @@ const questionsData = [
       },
       {
         id: "q6",
-        maxPoints: 3,
+        maxPoints: 2,
         title: "Freeroam: gli ostaggi sono consentiti?",
         answer: "No, durante una freeroam non possono essere presenti ostaggi."
       },
@@ -59,7 +59,7 @@ const questionsData = [
       },
       {
         id: "q8",
-        maxPoints: 4,
+        maxPoints: 3,
         title: "Freeroam: armi autorizzate.",
         answer: "Solo pistole a colpo singolo e giubbotti."
       }
@@ -82,13 +82,13 @@ const questionsData = [
       },
       {
         id: "q11",
-        maxPoints: 4,
+        maxPoints: 6,
         title: "Rapina Fleeca: numeri, caschi e armi consentite.",
         answer: "Fleeca: agenti 4. Criminali minimo 2, massimo 4. Sono consentiti caschetti, giubbotti, pistole a colpo singolo e P90."
       },
       {
         id: "q12",
-        maxPoints: 5,
+        maxPoints: 6,
         title: "Rapina Pacific: numeri, ostaggi, caschi e armi consentite.",
         answer: "Pacific: agenti 12. Criminali minimo 6, massimo 10. Ostaggi 4. Sono consentiti caschetti, giubbotti e qualunque arma in dotazione."
       }
@@ -99,13 +99,13 @@ const questionsData = [
     questions: [
       {
         id: "q13",
-        maxPoints: 9,
+        maxPoints: 12,
         title: "Elenca i principali codici radio e il loro significato.",
         answer: "Codici principali: 10-0 = Muto radio; 10-2 = Ricevuto male; 10-3 = Stop trasmissioni; 10-4 = Ricevuto; 10-5 = Ultimo messaggio; 10-7 = Fuori servizio; 10-8 = In servizio; 10-15 = Trasporto detenuto; 10-17 = Test sul veicolo; 10-19 = Disponibile in centrale; 10-20 = Posizione; 10-25 = Pericolo / urgenza; 10-40 = Ufficiale deceduto; 10-48 = Convergenza immediata; 10-50 = Incidente; 10-55 = Disturbo veicolare; 10-60 = Alterazione del traffico; 10-66 = Posto di blocco; 10-80 = Inseguimento; 10-99 = Ricercato; 10-100 = Richiesta rinforzi; 10-101 = Assalto alla centrale."
       },
       {
         id: "q14",
-        maxPoints: 5,
+        maxPoints: 4,
         title: "Elenca i codici status e quando usarli.",
         answer: "Status 1 = pattuglia disponibile per direttive. Status 2 = pattuglia non disponibile per direttive. Status 3 = pattuglia in rifornimento / pausa cibo / riparazione veicolo."
       }
@@ -116,7 +116,7 @@ const questionsData = [
     questions: [
       {
         id: "q15",
-        maxPoints: 7,
+        maxPoints: 9,
         title: "Procedura inseguimento: ALT, 10-80, comunicazioni e gomme.",
         answer: "Base di riferimento: 3 Alt distanziati di 10 secondi, oppure 5 Alt se il soggetto è in moto. Poi 10-80 con comunicazione in radio di posizione e veicolo. Dopo le manovre consentite e nei casi previsti, dopo 3 PIT è possibile aprire il fuoco alle gomme."
       },
@@ -133,7 +133,7 @@ const questionsData = [
     questions: [
       {
         id: "q17",
-        maxPoints: 12,
+        maxPoints: 13,
         title: "Recita correttamente il Miranda Warning.",
         answer: "Formula di riferimento: Lei ha il diritto di rimanere in silenzio. Qualsiasi cosa dirà potrà essere usata contro di lei in tribunale. Ha il diritto di parlare con un avvocato e di averlo presente durante l'interrogatorio. Se non può permettersene uno, gliene sarà assegnato uno d'ufficio. Ha compreso i suoi diritti?"
       }
@@ -144,7 +144,7 @@ const questionsData = [
     questions: [
       {
         id: "q18",
-        maxPoints: 6,
+        maxPoints: 3,
         title: "Ragionamento sulle procedure LSPD e sicurezza operativa.",
         answer: "Valutare se il candidato ragiona sulle procedure invece di rispondere a caso: deve saper spiegare cosa fare, perché farlo e quando chiedere supporto."
       }
@@ -158,7 +158,7 @@ const trainingQuestionsData = [
     questions: [
       {
         id: "tq1",
-        maxPoints: 7,
+        maxPoints: 9,
         title: "Compilazione moduli arresto, esito rapine e multe.",
         answer: "Verificare che sappia compilare i moduli con dati completi, reati corretti, prove richieste e importi coerenti. Il modulo arresto è il punto più importante."
       },
@@ -176,13 +176,13 @@ const trainingQuestionsData = [
       },
       {
         id: "tq4",
-        maxPoints: 4,
+        maxPoints: 3,
         title: "Costi dei servizi di polizia: documenti e porto d'armi.",
         answer: "Il candidato deve conoscere i costi dei documenti e del porto d'armi, e sapere come comunicarli al cittadino."
       },
       {
         id: "tq5",
-        maxPoints: 4,
+        maxPoints: 3,
         title: "Contenuto della dotazione della polizia.",
         answer: "Verificare cosa riceve una recluta e cosa invece richiede autorizzazione superiore."
       },
@@ -200,13 +200,13 @@ const trainingQuestionsData = [
       },
       {
         id: "tq8",
-        maxPoints: 2,
+        maxPoints: 1,
         title: "Test balistico, soldi sporchi e test sostanze stupefacenti. (Facoltativo)",
         answer: "Argomento facoltativo: utile per capire se sa gestire prove e controlli aggiuntivi."
       },
       {
         id: "tq9",
-        maxPoints: 3,
+        maxPoints: 4,
         title: "Errori comuni nei moduli arresto, PDA e richieste processo.",
         answer: "Spiegare e far riconoscere gli errori più comuni: mancanza di GoPro, attribuzione errata dei reati, dati incompleti, importi sbagliati o richiesta processo usata male."
       },
