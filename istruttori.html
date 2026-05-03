@@ -117,6 +117,18 @@
           </div>
           <input id="importInstructorsFile" class="visually-hidden" type="file" accept="application/json,.json" />
 
+          <div class="movement-ledger" aria-labelledby="recentMovementsTitle">
+            <div class="movement-ledger-header">
+              <div>
+                <p class="eyebrow">Storico rapido</p>
+                <h3 id="recentMovementsTitle">Ultimi movimenti</h3>
+              </div>
+              <span class="panel-badge">ID</span>
+            </div>
+
+            <div id="recentMovementsList" class="movement-log" aria-live="polite"></div>
+          </div>
+
           <p id="instructorsSaveStatus" class="save-status" aria-live="polite">Pronto</p>
         </div>
       </aside>

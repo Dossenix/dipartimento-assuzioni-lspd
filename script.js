@@ -8,6 +8,7 @@ const defaultInstructorsState = {
   eventDate: "2026-04-21",
   cycleLabel: "21/04 - 05/05",
   signature: "<@&1495402199965106227> <@1084580275582931044>\n<@&1071162374591098920> <@936696543241732127>",
+  movementSequence: 0,
   instructors: [
     { id: "inst-mako", name: "Mako", trainings: 0, warnings: 0, active: false },
     { id: "inst-como", name: "CoMo", trainings: 0, warnings: 0, active: true },
@@ -856,6 +857,7 @@ const istruttoriDom = {
   addInstructorBtn: document.getElementById("addInstructorBtn"),
   instructorsContainer: document.getElementById("instructorsContainer"),
   finalReport: document.getElementById("instructorsFinalReport"),
+  recentMovementsList: document.getElementById("recentMovementsList"),
   copyReportBtn: document.getElementById("copyInstructorsReportBtn"),
   downloadReportBtn: document.getElementById("downloadInstructorsReportBtn"),
   exportDataBtn: document.getElementById("exportInstructorsDataBtn"),
@@ -891,7 +893,10 @@ function loadInstructorsState() {
     instructors: Array.isArray(saved.instructors)
       ? saved.instructors.map(normalizeInstructorRecord)
       : defaults.instructors,
-    movements: Array.isArray(saved.movements) ? saved.movements : []
+    movementSequence: resolveMovementSequence(saved),
+    movements: Array.isArray(saved.movements)
+      ? saved.movements.map(normalizeMovementRecord)
+      : []
   };
 }
 
@@ -923,6 +928,27 @@ function normalizeInstructorRecord(record) {
     warnings: toNonNegativeInt(record.warnings),
     active: record.active !== false
   };
+}
+
+function normalizeMovementRecord(record, index = 0) {
+  return {
+    id: record.id || `MOV-${String(index + 1).padStart(3, "0")}`,
+    type: record.type || "addestramento",
+    instructorId: record.instructorId || "",
+    instructorName: record.instructorName || "Istruttore",
+    reason: record.reason || "",
+    date: record.date || formatDateFilePart(new Date())
+  };
+}
+
+function resolveMovementSequence(source) {
+  const movements = Array.isArray(source.movements) ? source.movements : [];
+  const maxFromIds = movements.reduce((max, movement) => {
+    const match = String(movement.id || "").match(/^MOV-(\d+)$/i);
+    return match ? Math.max(max, Number.parseInt(match[1], 10)) : max;
+  }, 0);
+
+  return Math.max(toNonNegativeInt(source.movementSequence), maxFromIds, movements.length);
 }
 
 function hydrateIstruttoriForm() {
@@ -961,6 +987,7 @@ function attachIstruttoriListeners() {
   istruttoriDom.importFile?.addEventListener("change", importInstructorsData);
   istruttoriDom.newCycleBtn?.addEventListener("click", startNewInstructorsCycle);
   istruttoriDom.resetBtn?.addEventListener("click", resetInstructorsState);
+  istruttoriDom.recentMovementsList?.addEventListener("click", handleRecentMovementClick);
 
   istruttoriDom.instructorsContainer?.addEventListener("input", handleInstructorRowInput);
   istruttoriDom.instructorsContainer?.addEventListener("change", handleInstructorRowInput);
@@ -1025,16 +1052,7 @@ function registerInstructorMovement() {
     instructor.active = false;
   }
 
-  instructorsState.movements.unshift({
-    id: buildMovementId(),
-    type,
-    instructorId: instructor.id,
-    instructorName: instructor.name,
-    reason,
-    date: formatDateFilePart(new Date())
-  });
-
-  instructorsState.movements = instructorsState.movements.slice(0, 18);
+  addInstructorMovementRecord(type, instructor, reason);
   setInputValue(istruttoriDom.movementName, "");
   setInputValue(istruttoriDom.movementReason, "");
   renderInstructors();
@@ -1198,15 +1216,7 @@ function applyInstructorQuickAction(instructorId, action) {
     instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
   }
 
-  instructorsState.movements.unshift({
-    id: buildMovementId(),
-    type: action === "warning" ? "ammonimento" : "addestramento",
-    instructorId: instructor.id,
-    instructorName: instructor.name,
-    reason: "Azione rapida",
-    date: formatDateFilePart(new Date())
-  });
-  instructorsState.movements = instructorsState.movements.slice(0, 18);
+  addInstructorMovementRecord(action === "warning" ? "ammonimento" : "addestramento", instructor, "Azione rapida");
 
   renderInstructors();
   renderMovementInstructorOptions();
@@ -1224,6 +1234,67 @@ function createInstructorNumberInput(instructor, key, className) {
   input.className = className;
   input.dataset.instructorId = instructor.id;
   return input;
+}
+
+function addInstructorMovementRecord(type, instructor, reason = "") {
+  instructorsState.movements.unshift({
+    id: buildMovementId(),
+    type,
+    instructorId: instructor.id,
+    instructorName: instructor.name,
+    reason,
+    date: formatDateFilePart(new Date())
+  });
+  instructorsState.movements = instructorsState.movements.slice(0, 18);
+}
+
+function handleRecentMovementClick(event) {
+  const deleteButton = event.target.closest("[data-delete-movement-id]");
+  if (!deleteButton) return;
+
+  deleteInstructorMovement(deleteButton.dataset.deleteMovementId);
+}
+
+function deleteInstructorMovement(movementId) {
+  const movement = instructorsState.movements.find(item => item.id === movementId);
+  if (!movement) {
+    showToast("Movimento non trovato.", "warning");
+    return;
+  }
+
+  const confirmDelete = confirm(`Eliminare il movimento ${formatMovementDisplayId(movement)}? Verrà annullato anche il suo effetto diretto sul registro.`);
+  if (!confirmDelete) return;
+
+  revertMovementEffect(movement);
+  instructorsState.movements = instructorsState.movements.filter(item => item.id !== movement.id);
+
+  renderInstructors();
+  renderMovementInstructorOptions();
+  updateIstruttoriEverything();
+  saveInstructorsState();
+  showToast("Movimento eliminato.", "success");
+}
+
+function revertMovementEffect(movement) {
+  const instructor = findInstructorById(movement.instructorId)
+    || instructorsState.instructors.find(item => item.name === movement.instructorName);
+  if (!instructor) return;
+
+  if (movement.type === "addestramento") {
+    instructor.trainings = Math.max(0, toNonNegativeInt(instructor.trainings) - 1);
+  }
+
+  if (movement.type === "ammonimento") {
+    instructor.warnings = Math.max(0, toNonNegativeInt(instructor.warnings) - 1);
+  }
+
+  if (movement.type === "assunzione") {
+    instructor.active = false;
+  }
+
+  if (movement.type === "rimozione") {
+    instructor.active = true;
+  }
 }
 
 function renderMovementInstructorOptions() {
@@ -1257,10 +1328,55 @@ function updateIstruttoriEverything() {
   setText(istruttoriDom.movementCount, String(stats.movementCount));
   setText(istruttoriDom.topValue, stats.topLabel);
   setHelperText(istruttoriDom.helperText, stats.helper);
+  renderRecentMovements();
 
   if (istruttoriDom.finalReport) {
     istruttoriDom.finalReport.value = buildInstructorsReport();
   }
+}
+
+function renderRecentMovements() {
+  replaceChildren(istruttoriDom.recentMovementsList);
+  if (!istruttoriDom.recentMovementsList) return;
+
+  const movements = instructorsState.movements.slice(0, 8);
+  if (!movements.length) {
+    istruttoriDom.recentMovementsList.appendChild(createTextElement("p", "helper-text", "Nessun movimento registrato."));
+    return;
+  }
+
+  movements.forEach(movement => {
+    istruttoriDom.recentMovementsList.appendChild(createRecentMovementItem(movement));
+  });
+}
+
+function createRecentMovementItem(movement) {
+  const item = document.createElement("article");
+  item.className = "movement-log-item";
+
+  const content = document.createElement("div");
+  content.className = "movement-log-copy";
+
+  const top = document.createElement("div");
+  top.className = "movement-log-top";
+  top.append(
+    createTextElement("strong", "movement-id-chip", formatMovementDisplayId(movement)),
+    createTextElement("span", "movement-type-chip", formatMovementTypeLabel(movement.type))
+  );
+
+  const detail = createTextElement("p", "", `${movement.instructorName || "Istruttore"} - ${formatMovementImpact(movement)}`);
+  const meta = createTextElement("small", "", formatRecentMovementMeta(movement));
+  content.append(top, detail, meta);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "btn btn-danger btn-small";
+  deleteButton.dataset.deleteMovementId = movement.id;
+  deleteButton.textContent = "Elimina";
+  deleteButton.setAttribute("aria-label", `Elimina movimento ${formatMovementDisplayId(movement)}`);
+
+  item.append(content, deleteButton);
+  return item;
 }
 
 function calculateInstructorsStats() {
@@ -1408,6 +1524,33 @@ function formatMovementReportLine(movement) {
   return `${date} - Addestramento svolto: ${name} (+1 pp)${reason}`;
 }
 
+function formatMovementDisplayId(movement) {
+  return String(movement.id || "MOV-000").toUpperCase();
+}
+
+function formatMovementTypeLabel(type) {
+  const labels = {
+    addestramento: "Addestramento",
+    ammonimento: "Ammonimento",
+    assunzione: "Assunzione",
+    rimozione: "Rimozione"
+  };
+  return labels[type] || "Movimento";
+}
+
+function formatMovementImpact(movement) {
+  if (movement.type === "addestramento") return "+1 pp";
+  if (movement.type === "ammonimento") return "-2 pp";
+  if (movement.type === "assunzione") return "ingresso reparto";
+  if (movement.type === "rimozione") return "uscita reparto";
+  return "movimento";
+}
+
+function formatRecentMovementMeta(movement) {
+  const date = movement.date ? formatInputDateToIT(movement.date) : formatDateIT(new Date());
+  return movement.reason ? `${date} - ${movement.reason}` : date;
+}
+
 function getInstructorTopGroups() {
   const sorted = instructorsState.instructors
     .filter(instructor => instructor.active)
@@ -1467,7 +1610,9 @@ function buildInstructorId(name) {
 }
 
 function buildMovementId() {
-  return `mov-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  const nextSequence = toNonNegativeInt(instructorsState?.movementSequence) + 1;
+  if (instructorsState) instructorsState.movementSequence = nextSequence;
+  return `MOV-${String(nextSequence).padStart(3, "0")}`;
 }
 
 function buildInstructorsFilename() {
@@ -1507,7 +1652,10 @@ function importInstructorsData(event) {
         schemaVersion: defaults.schemaVersion,
         cycleLabel: resolveInstructorCycleLabel(parsed),
         instructors: parsed.instructors.map(normalizeInstructorRecord),
-        movements: Array.isArray(parsed.movements) ? parsed.movements : []
+        movementSequence: resolveMovementSequence(parsed),
+        movements: Array.isArray(parsed.movements)
+          ? parsed.movements.map(normalizeMovementRecord)
+          : []
       };
       hydrateIstruttoriForm();
       renderInstructors();
@@ -1536,6 +1684,7 @@ function startNewInstructorsCycle() {
     warnings: 0
   }));
   instructorsState.movements = [];
+  instructorsState.movementSequence = 0;
 
   hydrateIstruttoriForm();
   renderInstructors();
