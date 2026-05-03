@@ -833,6 +833,8 @@ function resetTraining() {
 ========================= */
 
 let instructorsState = null;
+const MAX_INSTRUCTOR_MOVEMENTS = 40;
+const RECENT_MOVEMENT_LIMIT = 10;
 
 const istruttoriDom = {
   eventTitle: document.getElementById("instructorsEventTitle"),
@@ -937,7 +939,20 @@ function normalizeMovementRecord(record, index = 0) {
     instructorId: record.instructorId || "",
     instructorName: record.instructorName || "Istruttore",
     reason: record.reason || "",
-    date: record.date || formatDateFilePart(new Date())
+    date: record.date || formatDateFilePart(new Date()),
+    createdInstructor: Boolean(record.createdInstructor),
+    beforeState: normalizeMovementSnapshot(record.beforeState),
+    afterState: normalizeMovementSnapshot(record.afterState)
+  };
+}
+
+function normalizeMovementSnapshot(snapshot) {
+  if (!snapshot) return null;
+
+  return {
+    trainings: toNonNegativeInt(snapshot.trainings),
+    warnings: toNonNegativeInt(snapshot.warnings),
+    active: snapshot.active !== false
   };
 }
 
@@ -1026,9 +1041,11 @@ function registerInstructorMovement() {
   const typedName = getValue(istruttoriDom.movementName);
   const reason = getValue(istruttoriDom.movementReason);
   let instructor = selectedId ? findInstructorById(selectedId) : null;
+  let createdInstructor = false;
 
   if (!instructor && typedName) {
     instructor = upsertInstructorByName(typedName, { active: true });
+    createdInstructor = true;
   }
 
   if (!instructor) {
@@ -1036,23 +1053,13 @@ function registerInstructorMovement() {
     return;
   }
 
-  if (type === "addestramento") {
-    instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
-  }
-
-  if (type === "ammonimento") {
-    instructor.warnings = toNonNegativeInt(instructor.warnings) + 1;
-  }
-
-  if (type === "assunzione") {
-    instructor.active = true;
-  }
-
-  if (type === "rimozione") {
-    instructor.active = false;
-  }
-
-  addInstructorMovementRecord(type, instructor, reason);
+  const beforeState = createdInstructor ? null : captureInstructorMovementState(instructor);
+  applyMovementEffect(type, instructor);
+  addInstructorMovementRecord(type, instructor, reason, {
+    beforeState,
+    afterState: captureInstructorMovementState(instructor),
+    createdInstructor
+  });
   setInputValue(istruttoriDom.movementName, "");
   setInputValue(istruttoriDom.movementReason, "");
   renderInstructors();
@@ -1210,13 +1217,13 @@ function applyInstructorQuickAction(instructorId, action) {
   const instructor = findInstructorById(instructorId);
   if (!instructor) return;
 
-  if (action === "warning") {
-    instructor.warnings = toNonNegativeInt(instructor.warnings) + 1;
-  } else if (action === "training") {
-    instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
-  }
-
-  addInstructorMovementRecord(action === "warning" ? "ammonimento" : "addestramento", instructor, "Azione rapida");
+  const type = action === "warning" ? "ammonimento" : "addestramento";
+  const beforeState = captureInstructorMovementState(instructor);
+  applyMovementEffect(type, instructor);
+  addInstructorMovementRecord(type, instructor, "Azione rapida", {
+    beforeState,
+    afterState: captureInstructorMovementState(instructor)
+  });
 
   renderInstructors();
   renderMovementInstructorOptions();
@@ -1236,16 +1243,53 @@ function createInstructorNumberInput(instructor, key, className) {
   return input;
 }
 
-function addInstructorMovementRecord(type, instructor, reason = "") {
+function captureInstructorMovementState(instructor) {
+  return {
+    trainings: toNonNegativeInt(instructor.trainings),
+    warnings: toNonNegativeInt(instructor.warnings),
+    active: instructor.active !== false
+  };
+}
+
+function applyInstructorMovementState(instructor, state) {
+  if (!state) return;
+
+  instructor.trainings = toNonNegativeInt(state.trainings);
+  instructor.warnings = toNonNegativeInt(state.warnings);
+  instructor.active = state.active !== false;
+}
+
+function applyMovementEffect(type, instructor) {
+  if (type === "addestramento") {
+    instructor.trainings = toNonNegativeInt(instructor.trainings) + 1;
+  }
+
+  if (type === "ammonimento") {
+    instructor.warnings = toNonNegativeInt(instructor.warnings) + 1;
+  }
+
+  if (type === "assunzione") {
+    instructor.active = true;
+  }
+
+  if (type === "rimozione") {
+    instructor.active = false;
+  }
+}
+
+function addInstructorMovementRecord(type, instructor, reason = "", meta = {}) {
   instructorsState.movements.unshift({
     id: buildMovementId(),
     type,
     instructorId: instructor.id,
     instructorName: instructor.name,
     reason,
-    date: formatDateFilePart(new Date())
+    date: formatDateFilePart(new Date()),
+    createdInstructor: Boolean(meta.createdInstructor),
+    beforeState: meta.beforeState || null,
+    afterState: meta.afterState || null
   });
-  instructorsState.movements = instructorsState.movements.slice(0, 18);
+  instructorsState.movements = instructorsState.movements.slice(0, MAX_INSTRUCTOR_MOVEMENTS);
 }
 
 function handleRecentMovementClick(event) {
@@ -1279,6 +1323,17 @@ function revertMovementEffect(movement) {
   const instructor = findInstructorById(movement.instructorId)
     || instructorsState.instructors.find(item => item.name === movement.instructorName);
   if (!instructor) return;
+
+  const hasOtherMovements = instructorsState.movements.some(item => item.id !== movement.id && item.instructorId === instructor.id);
+  if (movement.createdInstructor && !hasOtherMovements) {
+    instructorsState.instructors = instructorsState.instructors.filter(item => item.id !== instructor.id);
+    return;
+  }
+
+  if (movement.beforeState) {
+    applyInstructorMovementState(instructor, movement.beforeState);
+    return;
+  }
 
   if (movement.type === "addestramento") {
     instructor.trainings = Math.max(0, toNonNegativeInt(instructor.trainings) - 1);
@@ -1339,7 +1394,7 @@ function renderRecentMovements() {
   replaceChildren(istruttoriDom.recentMovementsList);
   if (!istruttoriDom.recentMovementsList) return;
 
-  const movements = instructorsState.movements.slice(0, 8);
+  const movements = instructorsState.movements.slice(0, RECENT_MOVEMENT_LIMIT);
   if (!movements.length) {
     istruttoriDom.recentMovementsList.appendChild(createTextElement("p", "helper-text", "Nessun movimento registrato."));
     return;
@@ -1516,12 +1571,13 @@ function formatMovementReportLine(movement) {
   const date = movement.date ? formatInputDateToIT(movement.date) : formatDateIT(new Date());
   const name = movement.instructorName || "Istruttore";
   const reason = movement.reason ? ` - ${movement.reason}` : "";
+  const id = `[${formatMovementDisplayId(movement)}]`;
 
-  if (movement.type === "assunzione") return `${date} - Assunzione: ${name}${reason}`;
-  if (movement.type === "rimozione") return `${date} - Rimozione: ${name}${reason}`;
-  if (movement.type === "ammonimento") return `${date} - Ammonimento: ${name} (-2 pp)${reason}`;
+  if (movement.type === "assunzione") return `${id} ${date} - Assunzione: ${name}${reason}`;
+  if (movement.type === "rimozione") return `${id} ${date} - Rimozione: ${name}${reason}`;
+  if (movement.type === "ammonimento") return `${id} ${date} - Ammonimento: ${name} (-2 pp)${reason}`;
 
-  return `${date} - Addestramento svolto: ${name} (+1 pp)${reason}`;
+  return `${id} ${date} - Addestramento svolto: ${name} (+1 pp)${reason}`;
 }
 
 function formatMovementDisplayId(movement) {
