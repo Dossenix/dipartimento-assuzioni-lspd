@@ -3,12 +3,14 @@ const FORMAZIONE_STORAGE_KEY = "formazione_form_state_v1";
 const ISTRUTTORI_STORAGE_KEY = "istruttori_reparto_state_v1";
 
 const defaultInstructorsState = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   eventTitle: 'GESTIONE "EVENTO" ISTRUTTORI',
   eventDate: "2026-04-21",
   cycleLabel: "21/04 - 05/05",
   signature: "<@&1495402199965106227> <@1084580275582931044>\n<@&1071162374591098920> <@936696543241732127>",
   movementSequence: 0,
+  archiveSequence: 0,
+  cycleArchives: [],
   instructors: [
     { id: "inst-mako", name: "Mako", trainings: 0, warnings: 0, active: false },
     { id: "inst-como", name: "CoMo", trainings: 0, warnings: 0, active: true },
@@ -833,8 +835,11 @@ function resetTraining() {
 ========================= */
 
 let instructorsState = null;
+let selectedCycleArchiveId = "";
 const MAX_INSTRUCTOR_MOVEMENTS = 40;
 const RECENT_MOVEMENT_LIMIT = 10;
+const MAX_CYCLE_ARCHIVES = 18;
+const MAX_ARCHIVE_CHART_ROWS = 12;
 
 const istruttoriDom = {
   eventTitle: document.getElementById("instructorsEventTitle"),
@@ -864,6 +869,14 @@ const istruttoriDom = {
   reportLineCount: document.getElementById("reportLineCount"),
   reportMovementMeta: document.getElementById("reportMovementMeta"),
   recentMovementsList: document.getElementById("recentMovementsList"),
+  archiveCountBadge: document.getElementById("archiveCountBadge"),
+  archiveEmpty: document.getElementById("cycleArchiveEmpty"),
+  archiveWorkspace: document.getElementById("cycleArchiveWorkspace"),
+  archiveTabs: document.getElementById("cycleArchiveTabs"),
+  archiveChartKicker: document.getElementById("archiveChartKicker"),
+  archiveChartTitle: document.getElementById("archiveChartTitle"),
+  archiveChartMeta: document.getElementById("archiveChartMeta"),
+  archiveChart: document.getElementById("cycleArchiveChart"),
   copyReportBtn: document.getElementById("copyInstructorsReportBtn"),
   copyReportInlineBtn: document.getElementById("copyInstructorsReportInlineBtn"),
   downloadReportBtn: document.getElementById("downloadInstructorsReportBtn"),
@@ -904,6 +917,10 @@ function loadInstructorsState() {
     movementSequence: resolveMovementSequence(saved),
     movements: Array.isArray(saved.movements)
       ? saved.movements.map(normalizeMovementRecord)
+      : [],
+    archiveSequence: resolveArchiveSequence(saved),
+    cycleArchives: Array.isArray(saved.cycleArchives)
+      ? saved.cycleArchives.map(normalizeCycleArchiveRecord).filter(Boolean)
       : []
   };
 }
@@ -972,6 +989,55 @@ function resolveMovementSequence(source) {
   return Math.max(toNonNegativeInt(source.movementSequence), maxFromIds, movements.length);
 }
 
+function normalizeCycleArchiveRecord(record, index = 0) {
+  if (!record) return null;
+
+  const instructors = Array.isArray(record.instructors)
+    ? record.instructors.map(normalizeArchiveInstructorRecord).filter(Boolean)
+    : [];
+  const totals = record.totals || {};
+
+  return {
+    id: record.id || `CYC-${String(index + 1).padStart(3, "0")}`,
+    cycleLabel: record.cycleLabel || "Ciclo salvato",
+    closedAt: record.closedAt || formatDateFilePart(new Date()),
+    eventDate: record.eventDate || "",
+    totals: {
+      trainings: toNonNegativeInt(totals.trainings),
+      warnings: toNonNegativeInt(totals.warnings),
+      active: toNonNegativeInt(totals.active),
+      inactive: toNonNegativeInt(totals.inactive),
+      movements: toNonNegativeInt(totals.movements)
+    },
+    instructors
+  };
+}
+
+function normalizeArchiveInstructorRecord(record) {
+  if (!record) return null;
+
+  const trainings = toNonNegativeInt(record.trainings);
+  const warnings = toNonNegativeInt(record.warnings);
+
+  return {
+    name: record.name || "Istruttore",
+    trainings,
+    warnings,
+    points: Number.isFinite(Number(record.points)) ? Number(record.points) : trainings - (warnings * 2),
+    active: record.active !== false
+  };
+}
+
+function resolveArchiveSequence(source) {
+  const archives = Array.isArray(source.cycleArchives) ? source.cycleArchives : [];
+  const maxFromIds = archives.reduce((max, archive) => {
+    const match = String(archive.id || "").match(/^CYC-(\d+)$/i);
+    return match ? Math.max(max, Number.parseInt(match[1], 10)) : max;
+  }, 0);
+
+  return Math.max(toNonNegativeInt(source.archiveSequence), maxFromIds, archives.length);
+}
+
 function hydrateIstruttoriForm() {
   setInputValue(istruttoriDom.eventTitle, instructorsState.eventTitle);
   setInputValue(istruttoriDom.eventDate, instructorsState.eventDate);
@@ -1013,6 +1079,7 @@ function attachIstruttoriListeners() {
   istruttoriDom.newCycleBtn?.addEventListener("click", startNewInstructorsCycle);
   istruttoriDom.resetBtn?.addEventListener("click", resetInstructorsState);
   istruttoriDom.recentMovementsList?.addEventListener("click", handleRecentMovementClick);
+  istruttoriDom.archiveTabs?.addEventListener("click", handleArchiveTabClick);
 
   istruttoriDom.instructorsContainer?.addEventListener("input", handleInstructorRowInput);
   istruttoriDom.instructorsContainer?.addEventListener("change", handleInstructorRowInput);
@@ -1394,6 +1461,7 @@ function updateIstruttoriEverything() {
   setText(istruttoriDom.topValue, stats.topLabel);
   setHelperText(istruttoriDom.helperText, stats.helper);
   renderRecentMovements();
+  renderCycleArchives();
 
   const reportText = buildInstructorsReport();
   if (istruttoriDom.finalReport) {
@@ -1451,6 +1519,112 @@ function createRecentMovementItem(movement) {
   deleteButton.setAttribute("aria-label", `Elimina movimento ${formatMovementDisplayId(movement)}`);
 
   item.append(content, deleteButton);
+  return item;
+}
+
+function handleArchiveTabClick(event) {
+  const tab = event.target.closest("[data-cycle-archive-id]");
+  if (!tab) return;
+
+  selectedCycleArchiveId = tab.dataset.cycleArchiveId;
+  renderCycleArchives();
+}
+
+function renderCycleArchives() {
+  const archives = instructorsState.cycleArchives || [];
+  setText(istruttoriDom.archiveCountBadge, `${archives.length} cicli`);
+
+  if (istruttoriDom.archiveEmpty) istruttoriDom.archiveEmpty.hidden = archives.length > 0;
+  if (istruttoriDom.archiveWorkspace) istruttoriDom.archiveWorkspace.hidden = archives.length === 0;
+
+  if (!archives.length) {
+    replaceChildren(istruttoriDom.archiveTabs);
+    replaceChildren(istruttoriDom.archiveChart);
+    replaceChildren(istruttoriDom.archiveChartMeta);
+    return;
+  }
+
+  if (!archives.some(archive => archive.id === selectedCycleArchiveId)) {
+    selectedCycleArchiveId = archives[0].id;
+  }
+
+  renderArchiveTabs(archives);
+  renderArchiveChart(archives.find(archive => archive.id === selectedCycleArchiveId) || archives[0]);
+}
+
+function renderArchiveTabs(archives) {
+  replaceChildren(istruttoriDom.archiveTabs);
+  if (!istruttoriDom.archiveTabs) return;
+
+  archives.forEach(archive => {
+    const tab = document.createElement("button");
+    const selected = archive.id === selectedCycleArchiveId;
+    tab.type = "button";
+    tab.className = `archive-tab${selected ? " is-active" : ""}`;
+    tab.dataset.cycleArchiveId = archive.id;
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+    tab.textContent = `${archive.id} - ${archive.cycleLabel}`;
+    istruttoriDom.archiveTabs.appendChild(tab);
+  });
+}
+
+function renderArchiveChart(archive) {
+  setText(istruttoriDom.archiveChartKicker, formatInputDateToIT(archive.closedAt) || archive.closedAt);
+  setText(istruttoriDom.archiveChartTitle, archive.cycleLabel);
+  renderArchiveMetrics(archive);
+
+  replaceChildren(istruttoriDom.archiveChart);
+  if (!istruttoriDom.archiveChart) return;
+
+  const rows = getArchiveChartRows(archive);
+  if (!rows.length) {
+    istruttoriDom.archiveChart.appendChild(createTextElement("p", "helper-text", "Nessun dato disponibile per questo ciclo."));
+    return;
+  }
+
+  const maxAbsPoints = Math.max(...rows.map(row => Math.abs(row.points)), 1);
+  rows.forEach(row => {
+    istruttoriDom.archiveChart.appendChild(createArchiveChartRow(row, maxAbsPoints));
+  });
+}
+
+function renderArchiveMetrics(archive) {
+  replaceChildren(istruttoriDom.archiveChartMeta);
+  if (!istruttoriDom.archiveChartMeta) return;
+
+  [
+    `${archive.totals.trainings} add.`,
+    `${archive.totals.warnings} amm.`,
+    `${archive.totals.inactive} inattivi`,
+    `${archive.totals.movements} mov.`
+  ].forEach(text => {
+    istruttoriDom.archiveChartMeta.appendChild(createTextElement("span", "", text));
+  });
+}
+
+function getArchiveChartRows(archive) {
+  return [...archive.instructors]
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
+    .slice(0, MAX_ARCHIVE_CHART_ROWS);
+}
+
+function createArchiveChartRow(row, maxAbsPoints) {
+  const item = document.createElement("article");
+  item.className = `archive-chart-row${row.points < 0 ? " is-negative" : ""}${row.points === 0 ? " is-zero" : ""}`;
+
+  const name = createTextElement("strong", "", row.active ? row.name : `${row.name} (rimosso)`);
+  const track = document.createElement("div");
+  track.className = "archive-chart-track";
+
+  const bar = document.createElement("span");
+  bar.style.width = `${Math.max(6, Math.round((Math.abs(row.points) / maxAbsPoints) * 100))}%`;
+  track.appendChild(bar);
+
+  const points = createTextElement("span", "archive-points", `${row.points} pp`);
+  const detail = createTextElement("small", "", `${row.trainings} add. / ${row.warnings} amm.`);
+
+  item.append(name, track, points, detail);
   return item;
 }
 
@@ -1678,6 +1852,37 @@ function getInstructorTrainingTotal(instructor) {
   return toNonNegativeInt(instructor.trainings);
 }
 
+function createCycleArchiveFromCurrentState() {
+  const instructors = instructorsState.instructors.map(instructor => {
+    const trainings = getInstructorTrainingTotal(instructor);
+    const warnings = toNonNegativeInt(instructor.warnings);
+    return {
+      name: instructor.name || "Istruttore",
+      trainings,
+      warnings,
+      points: trainings - (warnings * 2),
+      active: instructor.active !== false
+    };
+  });
+
+  const totals = {
+    trainings: instructors.reduce((total, instructor) => total + instructor.trainings, 0),
+    warnings: instructors.reduce((total, instructor) => total + instructor.warnings, 0),
+    active: instructors.filter(instructor => instructor.active).length,
+    inactive: instructors.filter(instructor => instructor.trainings === 0).length,
+    movements: instructorsState.movements.length
+  };
+
+  return {
+    id: buildArchiveId(),
+    cycleLabel: formatCycleLabel(),
+    closedAt: formatDateFilePart(new Date()),
+    eventDate: instructorsState.eventDate || "",
+    totals,
+    instructors
+  };
+}
+
 function toNonNegativeInt(value) {
   const number = Number.parseInt(value, 10);
   return Number.isFinite(number) && number > 0 ? number : 0;
@@ -1691,6 +1896,12 @@ function buildMovementId() {
   const nextSequence = toNonNegativeInt(instructorsState?.movementSequence) + 1;
   if (instructorsState) instructorsState.movementSequence = nextSequence;
   return `MOV-${String(nextSequence).padStart(3, "0")}`;
+}
+
+function buildArchiveId() {
+  const nextSequence = toNonNegativeInt(instructorsState?.archiveSequence) + 1;
+  if (instructorsState) instructorsState.archiveSequence = nextSequence;
+  return `CYC-${String(nextSequence).padStart(3, "0")}`;
 }
 
 function buildInstructorsFilename() {
@@ -1733,8 +1944,13 @@ function importInstructorsData(event) {
         movementSequence: resolveMovementSequence(parsed),
         movements: Array.isArray(parsed.movements)
           ? parsed.movements.map(normalizeMovementRecord)
+          : [],
+        archiveSequence: resolveArchiveSequence(parsed),
+        cycleArchives: Array.isArray(parsed.cycleArchives)
+          ? parsed.cycleArchives.map(normalizeCycleArchiveRecord).filter(Boolean)
           : []
       };
+      selectedCycleArchiveId = instructorsState.cycleArchives[0]?.id || "";
       hydrateIstruttoriForm();
       renderInstructors();
       renderMovementInstructorOptions();
@@ -1752,9 +1968,12 @@ function importInstructorsData(event) {
 }
 
 function startNewInstructorsCycle() {
-  const confirmReset = confirm("Vuoi iniziare un nuovo ciclo da 2 settimane? Verranno azzerati addestramenti, ammonimenti e movimenti, mantenendo la lista istruttori.");
+  const confirmReset = confirm("Vuoi iniziare un nuovo ciclo da 2 settimane? Il ciclo attuale verrà salvato nello storico grafici, poi verranno azzerati addestramenti, ammonimenti e movimenti.");
   if (!confirmReset) return;
 
+  const archive = createCycleArchiveFromCurrentState();
+  instructorsState.cycleArchives = [archive, ...(instructorsState.cycleArchives || [])].slice(0, MAX_CYCLE_ARCHIVES);
+  selectedCycleArchiveId = archive.id;
   instructorsState.eventDate = formatDateFilePart(new Date());
   instructorsState.instructors = instructorsState.instructors.map(instructor => ({
     ...instructor,
@@ -1782,6 +2001,7 @@ function resetInstructorsState() {
   if (!confirmReset) return;
 
   instructorsState = cloneDefaultInstructorsState();
+  selectedCycleArchiveId = "";
   removeStorageItem(ISTRUTTORI_STORAGE_KEY);
   hydrateIstruttoriForm();
   renderInstructors();

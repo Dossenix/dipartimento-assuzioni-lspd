@@ -78,6 +78,10 @@ svg {
   display: block;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -840,6 +844,147 @@ a:focus-visible {
   min-height: 520px;
 }
 
+.archive-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 18px;
+}
+
+.archive-empty p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.archive-workspace {
+  display: grid;
+  gap: 14px;
+}
+
+.archive-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.archive-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.archive-tab.is-active {
+  border-color: rgba(102, 209, 193, 0.52);
+  background: var(--primary-soft);
+  color: #d6fff8;
+}
+
+.archive-chart-shell {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.archive-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 16px;
+}
+
+.archive-chart-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.archive-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.archive-metrics span {
+  border: 1px solid rgba(242, 199, 92, 0.28);
+  border-radius: var(--radius);
+  background: var(--gold-soft);
+  color: var(--gold);
+  padding: 7px 9px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.archive-chart {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.archive-chart-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.45fr) minmax(0, 1fr) 76px 118px;
+  gap: 10px;
+  align-items: center;
+}
+
+.archive-chart-row strong,
+.archive-chart-row small {
+  overflow-wrap: anywhere;
+}
+
+.archive-chart-row small {
+  color: var(--muted);
+}
+
+.archive-chart-track {
+  height: 16px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.archive-chart-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
+}
+
+.archive-chart-row.is-negative .archive-chart-track span {
+  background: linear-gradient(90deg, #b94c49, var(--danger));
+}
+
+.archive-chart-row.is-zero .archive-chart-track span {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.archive-points {
+  justify-self: end;
+  border: 1px solid rgba(102, 209, 193, 0.22);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: #d6fff8;
+  padding: 6px 8px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.archive-chart-row.is-negative .archive-points {
+  border-color: rgba(255, 130, 125, 0.28);
+  background: var(--danger-soft);
+  color: #ffd9d7;
+}
+
 .movement-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1039,6 +1184,22 @@ a:focus-visible {
   .report-inline-actions .btn {
     flex: 1 1 180px;
   }
+
+  .archive-chart-header {
+    flex-direction: column;
+  }
+
+  .archive-metrics {
+    justify-content: flex-start;
+  }
+
+  .archive-chart-row {
+    grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr) 70px;
+  }
+
+  .archive-chart-row small {
+    grid-column: 2 / -1;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1111,6 +1272,18 @@ a:focus-visible {
   .report-inline-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .archive-chart-row {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-points {
+    justify-self: start;
+  }
+
+  .archive-chart-row small {
+    grid-column: auto;
   }
 }
 

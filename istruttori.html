@@ -190,6 +190,39 @@
       </div>
     </section>
 
+    <section class="panel archive-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Storico reset</p>
+          <h2>Grafici cicli</h2>
+        </div>
+        <span id="archiveCountBadge" class="panel-badge">0 cicli</span>
+      </div>
+
+      <div class="panel-body">
+        <div id="cycleArchiveEmpty" class="archive-empty">
+          <p>Nessun reset salvato. Quando avvii un nuovo ciclo da 2 settimane, quello appena chiuso comparirà qui con il suo grafico.</p>
+        </div>
+
+        <div id="cycleArchiveWorkspace" class="archive-workspace" hidden>
+          <div id="cycleArchiveTabs" class="archive-tabs" role="tablist" aria-label="Cicli salvati"></div>
+
+          <div class="archive-chart-shell">
+            <div class="archive-chart-header">
+              <div>
+                <p id="archiveChartKicker" class="eyebrow">Ciclo salvato</p>
+                <h3 id="archiveChartTitle">Grafico punteggi</h3>
+              </div>
+
+              <div id="archiveChartMeta" class="archive-metrics"></div>
+            </div>
+
+            <div id="cycleArchiveChart" class="archive-chart" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel movement-panel">
       <div class="panel-header">
         <div>
