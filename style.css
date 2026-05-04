@@ -798,6 +798,48 @@ a:focus-visible {
   min-height: 430px;
 }
 
+.report-module {
+  display: grid;
+  gap: 14px;
+}
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  padding: 12px;
+}
+
+.report-meta,
+.report-inline-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-meta span {
+  border: 1px solid rgba(102, 209, 193, 0.22);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: #d6fff8;
+  padding: 7px 9px;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.report-inline-actions .btn {
+  min-height: 40px;
+}
+
+.report-panel .summary-box {
+  min-height: 520px;
+}
+
 .movement-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -988,6 +1030,15 @@ a:focus-visible {
   .question-controls {
     grid-template-columns: 1fr;
   }
+
+  .report-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-inline-actions .btn {
+    flex: 1 1 180px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1055,6 +1106,11 @@ a:focus-visible {
 
   .movement-log-item .btn {
     width: 100%;
+  }
+
+  .report-inline-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
 

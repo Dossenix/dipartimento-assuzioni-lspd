@@ -137,9 +137,66 @@
     <section class="panel">
       <div class="panel-header">
         <div>
+          <p class="eyebrow">Registro</p>
+          <h2>Istruttori</h2>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="instructors-toolbar">
+          <label for="newInstructorName">
+            Nuovo istruttore
+            <input type="text" id="newInstructorName" placeholder="Nome istruttore" />
+          </label>
+
+          <label for="instructorSearch">
+            Cerca
+            <input type="search" id="instructorSearch" placeholder="Filtra per nome" />
+          </label>
+
+          <button id="addInstructorBtn" class="btn btn-secondary" type="button">Aggiungi istruttore</button>
+        </div>
+
+        <div id="instructorsContainer" class="instructor-list"></div>
+      </div>
+    </section>
+
+    <section class="panel report-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Modulo report</p>
+          <h2>Report finale</h2>
+        </div>
+        <span id="reportStatusBadge" class="panel-badge">Auto-generato</span>
+      </div>
+
+      <div class="panel-body">
+        <div class="report-module">
+          <div class="report-toolbar">
+            <div class="report-meta" aria-label="Dettagli report">
+              <span id="reportCycleMeta">Ciclo corrente</span>
+              <span id="reportLineCount">0 righe</span>
+              <span id="reportMovementMeta">0 movimenti</span>
+            </div>
+
+            <div class="report-inline-actions">
+              <button id="copyInstructorsReportInlineBtn" class="btn btn-primary" type="button">Copia report</button>
+              <button id="downloadInstructorsReportInlineBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+            </div>
+          </div>
+
+          <textarea id="instructorsFinalReport" class="summary-box summary-box-tall" readonly aria-label="Report istruttori generato"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel movement-panel">
+      <div class="panel-header">
+        <div>
           <p class="eyebrow">Reparto assunzioni</p>
           <h2>Movimenti</h2>
         </div>
+        <span class="panel-badge">Registro</span>
       </div>
 
       <div class="panel-body">
@@ -171,46 +228,6 @@
 
           <button id="registerMovementBtn" class="btn btn-primary" type="button">Registra movimento</button>
         </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Registro</p>
-          <h2>Istruttori</h2>
-        </div>
-      </div>
-
-      <div class="panel-body">
-        <div class="instructors-toolbar">
-          <label for="newInstructorName">
-            Nuovo istruttore
-            <input type="text" id="newInstructorName" placeholder="Nome istruttore" />
-          </label>
-
-          <label for="instructorSearch">
-            Cerca
-            <input type="search" id="instructorSearch" placeholder="Filtra per nome" />
-          </label>
-
-          <button id="addInstructorBtn" class="btn btn-secondary" type="button">Aggiungi istruttore</button>
-        </div>
-
-        <div id="instructorsContainer" class="instructor-list"></div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Output</p>
-          <h2>Report finale</h2>
-        </div>
-      </div>
-
-      <div class="panel-body">
-        <textarea id="instructorsFinalReport" class="summary-box summary-box-tall" readonly aria-label="Report istruttori generato"></textarea>
       </div>
     </section>
   </div>

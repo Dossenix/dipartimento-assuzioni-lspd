@@ -859,9 +859,15 @@ const istruttoriDom = {
   addInstructorBtn: document.getElementById("addInstructorBtn"),
   instructorsContainer: document.getElementById("instructorsContainer"),
   finalReport: document.getElementById("instructorsFinalReport"),
+  reportStatusBadge: document.getElementById("reportStatusBadge"),
+  reportCycleMeta: document.getElementById("reportCycleMeta"),
+  reportLineCount: document.getElementById("reportLineCount"),
+  reportMovementMeta: document.getElementById("reportMovementMeta"),
   recentMovementsList: document.getElementById("recentMovementsList"),
   copyReportBtn: document.getElementById("copyInstructorsReportBtn"),
+  copyReportInlineBtn: document.getElementById("copyInstructorsReportInlineBtn"),
   downloadReportBtn: document.getElementById("downloadInstructorsReportBtn"),
+  downloadReportInlineBtn: document.getElementById("downloadInstructorsReportInlineBtn"),
   exportDataBtn: document.getElementById("exportInstructorsDataBtn"),
   importDataBtn: document.getElementById("importInstructorsDataBtn"),
   importFile: document.getElementById("importInstructorsFile"),
@@ -994,7 +1000,11 @@ function attachIstruttoriListeners() {
   istruttoriDom.registerMovementBtn?.addEventListener("click", registerInstructorMovement);
   istruttoriDom.searchInput?.addEventListener("input", renderInstructors);
   istruttoriDom.copyReportBtn?.addEventListener("click", () => copySummaryText(istruttoriDom.finalReport?.value || ""));
+  istruttoriDom.copyReportInlineBtn?.addEventListener("click", () => copySummaryText(istruttoriDom.finalReport?.value || ""));
   istruttoriDom.downloadReportBtn?.addEventListener("click", () => {
+    downloadTextFile(istruttoriDom.finalReport?.value || "", buildInstructorsFilename());
+  });
+  istruttoriDom.downloadReportInlineBtn?.addEventListener("click", () => {
     downloadTextFile(istruttoriDom.finalReport?.value || "", buildInstructorsFilename());
   });
   istruttoriDom.exportDataBtn?.addEventListener("click", exportInstructorsData);
@@ -1385,9 +1395,19 @@ function updateIstruttoriEverything() {
   setHelperText(istruttoriDom.helperText, stats.helper);
   renderRecentMovements();
 
+  const reportText = buildInstructorsReport();
   if (istruttoriDom.finalReport) {
-    istruttoriDom.finalReport.value = buildInstructorsReport();
+    istruttoriDom.finalReport.value = reportText;
   }
+  updateReportModuleMeta(reportText, stats);
+}
+
+function updateReportModuleMeta(reportText, stats) {
+  const lineCount = reportText ? reportText.split("\n").length : 0;
+  setText(istruttoriDom.reportCycleMeta, formatCycleLabel());
+  setText(istruttoriDom.reportLineCount, `${lineCount} righe`);
+  setText(istruttoriDom.reportMovementMeta, `${stats.movementCount} movimenti`);
+  setText(istruttoriDom.reportStatusBadge, stats.movementCount ? "Aggiornato" : "Auto-generato");
 }
 
 function renderRecentMovements() {
@@ -1480,7 +1500,7 @@ function buildInstructorsReport() {
     });
   }
 
-  lines.push("", `**Vincitori attuali - miglior punteggio ciclo ${formatCycleLabel()}:**`);
+  lines.push("", `**Classifica attuale - ciclo ${cycleLabel}:**`);
   const topGroups = getInstructorTopGroups();
   if (!topGroups.length) {
     lines.push("> Da definire");
@@ -1490,25 +1510,27 @@ function buildInstructorsReport() {
 
   lines.push(
     "",
-    "**Recap generale reparto:**",
+    "**Recap operativo:**",
+    `> Ciclo: ${cycleLabel}`,
+    "> Regola punteggio: +1 per ogni addestramento, -2 per ogni ammonimento",
     `> Istruttori attivi: ${instructorsState.instructors.filter(instructor => instructor.active).length}`,
     `> Addestramenti svolti: ${instructorsState.instructors.reduce((total, instructor) => total + getInstructorTrainingTotal(instructor), 0)}`,
     `> Ammonimenti assegnati: ${instructorsState.instructors.reduce((total, instructor) => total + toNonNegativeInt(instructor.warnings), 0)}`,
     `> Inattivi ciclo 2 settimane: ${formatCycleInactiveList()}`,
     "",
-    `**Inattività ciclo 2 settimane (${cycleLabel}):**`,
+    `**Inattività da attenzionare (${cycleLabel}):**`,
     `> ${formatCycleInactiveList()}`,
     "",
-    "**Assunzioni reparto:**",
+    "**Movimenti reparto - Assunzioni:**",
     formatMovementGroup("assunzione"),
     "",
-    "**Rimozioni reparto:**",
+    "**Movimenti reparto - Rimozioni:**",
     formatMovementGroup("rimozione"),
     "",
-    "**Ammonimenti reparto:**",
+    "**Movimenti reparto - Ammonimenti:**",
     formatMovementGroup("ammonimento"),
     "",
-    "**Addestramenti registrati:**",
+    "**Movimenti reparto - Addestramenti:**",
     formatMovementGroup("addestramento")
   );
 
