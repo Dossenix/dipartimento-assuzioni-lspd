@@ -2,8 +2,82 @@ const COLLOQUIO_STORAGE_KEY = "colloquio_form_state_v1";
 const FORMAZIONE_STORAGE_KEY = "formazione_form_state_v1";
 const ISTRUTTORI_STORAGE_KEY = "istruttori_reparto_state_v1";
 
+const HIERARCHY_FOOTER_MENTION = "<@&1495219820038459512>";
+const INSTRUCTOR_HIERARCHY_ROLES = [
+  {
+    key: "supervisore",
+    title: "Supervisore Istruttori",
+    mention: "<@&1279360766218342400>",
+    members: [
+      { name: "White", note: "" },
+      { name: "Londra", note: "" },
+      { name: "Ancona", note: "" }
+    ]
+  },
+  {
+    key: "direttore",
+    title: "Direttore Istruttori",
+    mention: "<@&1495402199965106227>",
+    members: [
+      { name: "Detroit", note: "" }
+    ]
+  },
+  {
+    key: "vice-direttore",
+    title: "Vice Direttore Istruttori",
+    mention: "<@&1071162374591098920>",
+    members: []
+  },
+  {
+    key: "coordinatore",
+    title: "Coordinatore Istruttori",
+    mention: "<@&1097961769953144903>",
+    members: [
+      { name: "Mantova", note: "prova fino al giorno 19/05" }
+    ]
+  },
+  {
+    key: "capo",
+    title: "Istruttore Capo",
+    mention: "<@&1271822799992000604>",
+    members: [
+      { name: "Mako", note: "" },
+      { name: "Edo", note: "" },
+      { name: "Phoenix", note: "" }
+    ]
+  },
+  {
+    key: "esperto",
+    title: "Istruttore Esperto",
+    mention: "<@&1082037859604779088>",
+    members: [
+      { name: "Dublino", note: "" },
+      { name: "North", note: "" }
+    ]
+  },
+  {
+    key: "istruttore",
+    title: "Istruttore",
+    mention: "<@&1017373230648000532>",
+    members: [
+      { name: "Tropea", note: "" },
+      { name: "Cooper", note: "" },
+      { name: "Marke", note: "" },
+      { name: "Price", note: "" }
+    ]
+  },
+  {
+    key: "prova",
+    title: "Istruttore in Prova",
+    mention: "<@&1060666099076710491>",
+    members: [
+      { name: "Light", note: "" }
+    ]
+  }
+];
+
 const defaultInstructorsState = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   eventTitle: 'GESTIONE "EVENTO" ISTRUTTORI',
   eventDate: "2026-04-21",
   cycleLabel: "21/04 - 05/05",
@@ -11,6 +85,8 @@ const defaultInstructorsState = {
   movementSequence: 0,
   archiveSequence: 0,
   cycleArchives: [],
+  hierarchyUpdatedAt: "",
+  hierarchyRoles: createDefaultHierarchyRoles(),
   instructors: [
     { id: "inst-mako", name: "Mako", trainings: 0, warnings: 0, active: false },
     { id: "inst-como", name: "CoMo", trainings: 0, warnings: 0, active: true },
@@ -263,6 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (document.getElementById("instructorsContainer")) {
     initIstruttori();
+  }
+
+  if (document.getElementById("hierarchyBoard")) {
+    initHierarchy();
   }
 });
 
@@ -894,6 +974,25 @@ const istruttoriDom = {
   resetBtn: document.getElementById("resetInstructorsBtn")
 };
 
+const hierarchyDom = {
+  updateDate: document.getElementById("hierarchyUpdateDate"),
+  newName: document.getElementById("hierarchyNewName"),
+  newRole: document.getElementById("hierarchyNewRole"),
+  newNote: document.getElementById("hierarchyNewNote"),
+  addBtn: document.getElementById("addHierarchyMemberBtn"),
+  board: document.getElementById("hierarchyBoard"),
+  report: document.getElementById("hierarchyReport"),
+  roleCount: document.getElementById("hierarchyRoleCount"),
+  memberCount: document.getElementById("hierarchyMemberCount"),
+  vacantCount: document.getElementById("hierarchyVacantCount"),
+  lastUpdateText: document.getElementById("hierarchyLastUpdateText"),
+  copyBtn: document.getElementById("copyHierarchyBtn"),
+  copyInlineBtn: document.getElementById("copyHierarchyInlineBtn"),
+  downloadBtn: document.getElementById("downloadHierarchyBtn"),
+  downloadInlineBtn: document.getElementById("downloadHierarchyInlineBtn"),
+  saveStatus: document.getElementById("hierarchySaveStatus")
+};
+
 function initIstruttori() {
   instructorsState = loadInstructorsState();
   hydrateIstruttoriForm();
@@ -905,7 +1004,11 @@ function initIstruttori() {
 
 function loadInstructorsState() {
   const saved = readSavedJson(ISTRUTTORI_STORAGE_KEY);
-  if (!saved) return cloneDefaultInstructorsState();
+  if (!saved) {
+    const fresh = cloneDefaultInstructorsState();
+    fresh.hierarchyUpdatedAt = formatDateFilePart(new Date());
+    return fresh;
+  }
 
   const savedState = { ...saved };
   delete savedState.weekOneLabel;
@@ -927,12 +1030,55 @@ function loadInstructorsState() {
     archiveSequence: resolveArchiveSequence(saved),
     cycleArchives: Array.isArray(saved.cycleArchives)
       ? saved.cycleArchives.map(normalizeCycleArchiveRecord).filter(Boolean)
-      : []
+      : [],
+    hierarchyUpdatedAt: saved.hierarchyUpdatedAt || formatDateFilePart(new Date()),
+    hierarchyRoles: normalizeHierarchyRoles(saved.hierarchyRoles)
   };
 }
 
 function cloneDefaultInstructorsState() {
   return JSON.parse(JSON.stringify(defaultInstructorsState));
+}
+
+function createDefaultHierarchyRoles() {
+  return INSTRUCTOR_HIERARCHY_ROLES.map(role => ({
+    key: role.key,
+    title: role.title,
+    mention: role.mention,
+    members: role.members.map(member => normalizeHierarchyMemberRecord(member, role.key))
+  }));
+}
+
+function normalizeHierarchyRoles(savedRoles = []) {
+  const roleMap = new Map(Array.isArray(savedRoles)
+    ? savedRoles.map(role => [role.key, role])
+    : []);
+
+  return INSTRUCTOR_HIERARCHY_ROLES.map(defaultRole => {
+    const savedRole = roleMap.get(defaultRole.key) || {};
+    const members = Array.isArray(savedRole.members)
+      ? savedRole.members.map(member => normalizeHierarchyMemberRecord(member, defaultRole.key)).filter(Boolean)
+      : defaultRole.members.map(member => normalizeHierarchyMemberRecord(member, defaultRole.key));
+
+    return {
+      key: defaultRole.key,
+      title: defaultRole.title,
+      mention: defaultRole.mention,
+      members
+    };
+  });
+}
+
+function normalizeHierarchyMemberRecord(record, roleKey = "") {
+  if (!record) return null;
+  const name = String(record.name || "").trim();
+  if (!name) return null;
+
+  return {
+    id: record.id || buildHierarchyMemberId(name, roleKey),
+    name,
+    note: String(record.note || "").trim()
+  };
 }
 
 function resolveInstructorCycleLabel(source) {
@@ -971,7 +1117,9 @@ function normalizeMovementRecord(record, index = 0) {
     date: record.date || formatDateFilePart(new Date()),
     createdInstructor: Boolean(record.createdInstructor),
     beforeState: normalizeMovementSnapshot(record.beforeState),
-    afterState: normalizeMovementSnapshot(record.afterState)
+    afterState: normalizeMovementSnapshot(record.afterState),
+    hierarchyBefore: normalizeHierarchyPlacementRecord(record.hierarchyBefore),
+    hierarchyAfter: normalizeHierarchyPlacementRecord(record.hierarchyAfter)
   };
 }
 
@@ -982,6 +1130,15 @@ function normalizeMovementSnapshot(snapshot) {
     trainings: toNonNegativeInt(snapshot.trainings),
     warnings: toNonNegativeInt(snapshot.warnings),
     active: snapshot.active !== false
+  };
+}
+
+function normalizeHierarchyPlacementRecord(record) {
+  if (!record || !record.roleKey || !record.member) return null;
+
+  return {
+    roleKey: record.roleKey,
+    member: normalizeHierarchyMemberRecord(record.member, record.roleKey)
   };
 }
 
@@ -1101,6 +1258,419 @@ function attachIstruttoriListeners() {
   istruttoriDom.instructorsContainer?.addEventListener("click", handleInstructorRowClick);
 }
 
+/* =========================
+   GERARCHIA ISTRUTTORI
+========================= */
+
+function initHierarchy() {
+  instructorsState = loadInstructorsState();
+  hydrateHierarchyForm();
+  renderHierarchyRoleOptions();
+  renderHierarchyBoard();
+  attachHierarchyListeners();
+  updateHierarchyEverything();
+}
+
+function hydrateHierarchyForm() {
+  if (!instructorsState.hierarchyUpdatedAt) {
+    instructorsState.hierarchyUpdatedAt = formatDateFilePart(new Date());
+  }
+  setInputValue(hierarchyDom.updateDate, instructorsState.hierarchyUpdatedAt);
+}
+
+function renderHierarchyRoleOptions() {
+  if (!hierarchyDom.newRole) return;
+
+  replaceChildren(hierarchyDom.newRole);
+  getHierarchyRoles().forEach(role => {
+    hierarchyDom.newRole.appendChild(createOption(role.key, role.title));
+  });
+}
+
+function attachHierarchyListeners() {
+  hierarchyDom.updateDate?.addEventListener("input", handleHierarchyDateInput);
+  hierarchyDom.addBtn?.addEventListener("click", addHierarchyMemberFromInput);
+  hierarchyDom.board?.addEventListener("click", handleHierarchyBoardClick);
+  hierarchyDom.board?.addEventListener("input", handleHierarchyBoardInput);
+  hierarchyDom.copyBtn?.addEventListener("click", () => copySummaryText(buildHierarchyReport()));
+  hierarchyDom.copyInlineBtn?.addEventListener("click", () => copySummaryText(buildHierarchyReport()));
+  hierarchyDom.downloadBtn?.addEventListener("click", downloadHierarchyReport);
+  hierarchyDom.downloadInlineBtn?.addEventListener("click", downloadHierarchyReport);
+}
+
+function handleHierarchyDateInput() {
+  instructorsState.hierarchyUpdatedAt = getValue(hierarchyDom.updateDate) || formatDateFilePart(new Date());
+  updateHierarchyEverything();
+  saveInstructorsState();
+}
+
+function addHierarchyMemberFromInput() {
+  const name = getValue(hierarchyDom.newName);
+  const roleKey = getValue(hierarchyDom.newRole);
+  const note = getValue(hierarchyDom.newNote);
+  const role = findHierarchyRole(roleKey);
+
+  if (!name || !role) {
+    showToast("Inserisci nome e ruolo.", "warning");
+    return;
+  }
+
+  const hierarchyBefore = captureHierarchyPlacement(name);
+  const existingPlacement = findHierarchyMemberPlacementByName(name);
+  if (existingPlacement) {
+    removeHierarchyMemberFromRole(existingPlacement.role.key, existingPlacement.member.id);
+  }
+
+  role.members.push(normalizeHierarchyMemberRecord({ name, note }, role.key));
+  const hierarchyAfter = captureHierarchyPlacement(name);
+  ensureHierarchyAssumptionMovement(name, role, hierarchyBefore, hierarchyAfter);
+  touchHierarchyUpdatedAt();
+
+  setInputValue(hierarchyDom.newName, "");
+  setInputValue(hierarchyDom.newNote, "");
+  renderHierarchyBoard();
+  updateHierarchyEverything();
+  saveInstructorsState();
+  showToast(existingPlacement ? "Persona spostata nella nuova posizione." : "Persona aggiunta alla gerarchia.", "success");
+}
+
+function handleHierarchyBoardClick(event) {
+  const promoteButton = event.target.closest("[data-promote-member-id]");
+  if (promoteButton) {
+    moveHierarchyMember(promoteButton.dataset.roleKey, promoteButton.dataset.promoteMemberId, -1);
+    return;
+  }
+
+  const demoteButton = event.target.closest("[data-demote-member-id]");
+  if (demoteButton) {
+    moveHierarchyMember(demoteButton.dataset.roleKey, demoteButton.dataset.demoteMemberId, 1);
+    return;
+  }
+
+  const removeButton = event.target.closest("[data-remove-hierarchy-member-id]");
+  if (removeButton) {
+    removeHierarchyMember(removeButton.dataset.roleKey, removeButton.dataset.removeHierarchyMemberId);
+  }
+}
+
+function handleHierarchyBoardInput(event) {
+  const target = event.target;
+  const role = findHierarchyRole(target.dataset.roleKey);
+  if (!role) return;
+
+  const member = role.members.find(item => item.id === target.dataset.memberId);
+  if (!member) return;
+
+  if (target.classList.contains("hierarchy-member-name-input")) {
+    member.name = target.value.trimStart();
+  }
+
+  if (target.classList.contains("hierarchy-member-note-input")) {
+    member.note = target.value.trimStart();
+  }
+
+  touchHierarchyUpdatedAt();
+  updateHierarchyEverything();
+  saveInstructorsState();
+}
+
+function renderHierarchyBoard() {
+  replaceChildren(hierarchyDom.board);
+  if (!hierarchyDom.board) return;
+
+  getHierarchyRoles().forEach((role, index) => {
+    hierarchyDom.board.appendChild(createHierarchyRoleCard(role, index));
+  });
+}
+
+function createHierarchyRoleCard(role, index) {
+  const card = document.createElement("article");
+  card.className = "hierarchy-role-card";
+
+  const header = document.createElement("div");
+  header.className = "hierarchy-role-header";
+
+  const copy = document.createElement("div");
+  copy.append(
+    createTextElement("p", "eyebrow", role.mention),
+    createTextElement("h3", "", role.title)
+  );
+
+  header.append(copy, createTextElement("span", "panel-badge", `${role.members.length} persone`));
+
+  const list = document.createElement("div");
+  list.className = "hierarchy-member-list";
+
+  if (!role.members.length) {
+    list.appendChild(createTextElement("p", "hierarchy-empty", "Posizione non assegnata."));
+  } else {
+    role.members.forEach(member => {
+      list.appendChild(createHierarchyMemberRow(role, member, index));
+    });
+  }
+
+  card.append(header, list);
+  return card;
+}
+
+function createHierarchyMemberRow(role, member, roleIndex) {
+  const row = document.createElement("article");
+  row.className = "hierarchy-member-row";
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.value = member.name;
+  nameInput.maxLength = 80;
+  nameInput.className = "hierarchy-member-name-input";
+  nameInput.dataset.roleKey = role.key;
+  nameInput.dataset.memberId = member.id;
+
+  const noteInput = document.createElement("input");
+  noteInput.type = "text";
+  noteInput.value = member.note || "";
+  noteInput.placeholder = "Nota facoltativa";
+  noteInput.maxLength = 120;
+  noteInput.className = "hierarchy-member-note-input";
+  noteInput.dataset.roleKey = role.key;
+  noteInput.dataset.memberId = member.id;
+
+  const controls = document.createElement("div");
+  controls.className = "hierarchy-member-actions";
+  controls.append(
+    createHierarchyMoveButton(role.key, member.id, "promote", roleIndex === 0),
+    createHierarchyMoveButton(role.key, member.id, "demote", roleIndex === getHierarchyRoles().length - 1),
+    createHierarchyRemoveButton(role.key, member.id)
+  );
+
+  row.append(
+    createFieldLabel("Nome", nameInput),
+    createFieldLabel("Nota", noteInput),
+    controls
+  );
+  return row;
+}
+
+function createHierarchyMoveButton(roleKey, memberId, action, disabled) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "btn btn-secondary btn-small";
+  button.disabled = disabled;
+  button.dataset.roleKey = roleKey;
+  button.dataset[`${action}MemberId`] = memberId;
+  button.textContent = action === "promote" ? "Promuovi" : "Retrocedi";
+  return button;
+}
+
+function createHierarchyRemoveButton(roleKey, memberId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "btn btn-danger btn-small";
+  button.dataset.roleKey = roleKey;
+  button.dataset.removeHierarchyMemberId = memberId;
+  button.textContent = "Rimuovi";
+  return button;
+}
+
+function moveHierarchyMember(roleKey, memberId, direction) {
+  const roles = getHierarchyRoles();
+  const currentIndex = roles.findIndex(role => role.key === roleKey);
+  const targetIndex = currentIndex + direction;
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= roles.length) return;
+
+  const member = removeHierarchyMemberFromRole(roleKey, memberId);
+  if (!member) return;
+
+  roles[targetIndex].members.push(member);
+  touchHierarchyUpdatedAt();
+  renderHierarchyBoard();
+  updateHierarchyEverything();
+  saveInstructorsState();
+  showToast(direction < 0 ? "Promozione registrata." : "Spostamento registrato.", "success");
+}
+
+function removeHierarchyMember(roleKey, memberId) {
+  const role = findHierarchyRole(roleKey);
+  const member = role?.members.find(item => item.id === memberId);
+  if (!role || !member) return;
+
+  const confirmRemove = confirm(`Rimuovere ${member.name} dalla gerarchia e dal reparto istruttori?`);
+  if (!confirmRemove) return;
+
+  const hierarchyBefore = captureHierarchyPlacement(member.name);
+  removeHierarchyMemberFromRole(roleKey, memberId);
+  const hierarchyAfter = captureHierarchyPlacement(member.name);
+  ensureHierarchyRemovalMovement(member.name, role, hierarchyBefore, hierarchyAfter);
+  touchHierarchyUpdatedAt();
+  renderHierarchyBoard();
+  updateHierarchyEverything();
+  saveInstructorsState();
+  showToast("Rimozione collegata al registro movimenti.", "success");
+}
+
+function removeHierarchyMemberFromRole(roleKey, memberId) {
+  const role = findHierarchyRole(roleKey);
+  if (!role) return null;
+
+  const memberIndex = role.members.findIndex(member => member.id === memberId);
+  if (memberIndex < 0) return null;
+
+  const [member] = role.members.splice(memberIndex, 1);
+  return member;
+}
+
+function ensureHierarchyAssumptionMovement(name, role, hierarchyBefore = null, hierarchyAfter = null) {
+  const existing = instructorsState.instructors.find(instructor => instructor.name.toLowerCase() === name.toLowerCase());
+  const beforeState = existing ? captureInstructorMovementState(existing) : null;
+  const shouldRecordMovement = !existing || existing.active === false;
+  const instructor = upsertInstructorByName(name, { active: true });
+
+  if (!shouldRecordMovement) return;
+
+  addInstructorMovementRecord("assunzione", instructor, `Gerarchia: ${role.title}`, {
+    beforeState,
+    afterState: captureInstructorMovementState(instructor),
+    createdInstructor: !existing,
+    hierarchyBefore,
+    hierarchyAfter
+  });
+}
+
+function ensureHierarchyRemovalMovement(name, role, hierarchyBefore = null, hierarchyAfter = null) {
+  const instructor = instructorsState.instructors.find(item => item.name.toLowerCase() === name.toLowerCase());
+  if (!instructor || instructor.active === false) return;
+
+  const beforeState = captureInstructorMovementState(instructor);
+  applyMovementEffect("rimozione", instructor);
+  addInstructorMovementRecord("rimozione", instructor, `Gerarchia: ${role.title}`, {
+    beforeState,
+    afterState: captureInstructorMovementState(instructor),
+    hierarchyBefore,
+    hierarchyAfter
+  });
+}
+
+function syncHierarchyForInstructorMovement(type, instructor) {
+  if (type !== "assunzione" && type !== "rimozione") return {};
+
+  const hierarchyBefore = captureHierarchyPlacement(instructor.name);
+
+  if (type === "assunzione" && !hierarchyBefore) {
+    const defaultRole = getHierarchyRoles()[getHierarchyRoles().length - 1];
+    defaultRole?.members.push(normalizeHierarchyMemberRecord({ name: instructor.name, note: "" }, defaultRole.key));
+  }
+
+  if (type === "rimozione") {
+    removeHierarchyMemberByName(instructor.name);
+  }
+
+  const hierarchyAfter = captureHierarchyPlacement(instructor.name);
+  if (!hierarchyBefore && !hierarchyAfter) return {};
+
+  touchHierarchyUpdatedAt();
+  return { hierarchyBefore, hierarchyAfter };
+}
+
+function captureHierarchyPlacement(name) {
+  const placement = findHierarchyMemberPlacementByName(name);
+  if (!placement) return null;
+
+  return {
+    roleKey: placement.role.key,
+    member: {
+      ...placement.member
+    }
+  };
+}
+
+function restoreHierarchyPlacement(name, placement) {
+  removeHierarchyMemberByName(name);
+  if (!placement) return;
+
+  const role = findHierarchyRole(placement.roleKey);
+  if (!role) return;
+
+  role.members.push(normalizeHierarchyMemberRecord(placement.member, role.key));
+  touchHierarchyUpdatedAt();
+}
+
+function removeHierarchyMemberByName(name) {
+  const normalizedName = name.trim().toLowerCase();
+  getHierarchyRoles().forEach(role => {
+    role.members = role.members.filter(member => member.name.toLowerCase() !== normalizedName);
+  });
+}
+
+function updateHierarchyEverything() {
+  const report = buildHierarchyReport();
+  const roles = getHierarchyRoles();
+  const memberCount = roles.reduce((total, role) => total + role.members.length, 0);
+  const vacantCount = roles.filter(role => role.members.length === 0).length;
+
+  setText(hierarchyDom.roleCount, `${roles.length} ruoli`);
+  setText(hierarchyDom.memberCount, String(memberCount));
+  setText(hierarchyDom.vacantCount, String(vacantCount));
+  setText(hierarchyDom.lastUpdateText, formatInputDateToIT(instructorsState.hierarchyUpdatedAt));
+  setInputValue(hierarchyDom.report, report);
+}
+
+function buildHierarchyReport() {
+  const lines = [
+    "# ** <:LSPD:1495387705670893680>  | GERARCHIA ISTRUTTORI | <:LSPD:1495387705670893680>  **",
+    ""
+  ];
+
+  getHierarchyRoles().forEach(role => {
+    lines.push(`## ${role.mention} `, "");
+    if (!role.members.length) {
+      lines.push("> *Posizione non assegnata.*");
+    } else {
+      role.members.forEach(member => {
+        const note = member.note ? ` (${member.note})` : "";
+        lines.push(`> ${member.name}${note}`);
+      });
+    }
+    lines.push("");
+  });
+
+  lines.push(
+    `|| ${HIERARCHY_FOOTER_MENTION} ||`,
+    "",
+    `_Last Update: ${formatInputDateToIT(instructorsState.hierarchyUpdatedAt) || "[Data invio modulo]"}_`
+  );
+
+  return lines.join("\n");
+}
+
+function downloadHierarchyReport() {
+  const date = instructorsState.hierarchyUpdatedAt || formatDateFilePart(new Date());
+  downloadTextFile(buildHierarchyReport(), `gerarchia-istruttori-${date}.txt`);
+}
+
+function getHierarchyRoles() {
+  if (!Array.isArray(instructorsState.hierarchyRoles)) {
+    instructorsState.hierarchyRoles = createDefaultHierarchyRoles();
+  }
+  return instructorsState.hierarchyRoles;
+}
+
+function findHierarchyRole(roleKey) {
+  return getHierarchyRoles().find(role => role.key === roleKey) || null;
+}
+
+function findHierarchyMemberPlacementByName(name) {
+  const normalizedName = name.trim().toLowerCase();
+  for (const role of getHierarchyRoles()) {
+    const member = role.members.find(item => item.name.toLowerCase() === normalizedName);
+    if (member) return { role, member };
+  }
+  return null;
+}
+
+function touchHierarchyUpdatedAt() {
+  instructorsState.hierarchyUpdatedAt = formatDateFilePart(new Date());
+  setInputValue(hierarchyDom.updateDate, instructorsState.hierarchyUpdatedAt);
+}
+
 function handleIstruttoriSettingsInput() {
   instructorsState.eventTitle = getValue(istruttoriDom.eventTitle);
   instructorsState.eventDate = getValue(istruttoriDom.eventDate);
@@ -1147,10 +1717,12 @@ function registerInstructorMovement() {
 
   const beforeState = createdInstructor ? null : captureInstructorMovementState(instructor);
   applyMovementEffect(type, instructor);
+  const hierarchyMeta = syncHierarchyForInstructorMovement(type, instructor);
   addInstructorMovementRecord(type, instructor, reason, {
     beforeState,
     afterState: captureInstructorMovementState(instructor),
-    createdInstructor
+    createdInstructor,
+    ...hierarchyMeta
   });
   setInputValue(istruttoriDom.movementName, "");
   setInputValue(istruttoriDom.movementReason, "");
@@ -1379,7 +1951,9 @@ function addInstructorMovementRecord(type, instructor, reason = "", meta = {}) {
     date: formatDateFilePart(new Date()),
     createdInstructor: Boolean(meta.createdInstructor),
     beforeState: meta.beforeState || null,
-    afterState: meta.afterState || null
+    afterState: meta.afterState || null,
+    hierarchyBefore: meta.hierarchyBefore || null,
+    hierarchyAfter: meta.hierarchyAfter || null
   });
   instructorsState.movements = instructorsState.movements.slice(0, MAX_INSTRUCTOR_MOVEMENTS);
 }
@@ -1419,11 +1993,17 @@ function revertMovementEffect(movement) {
   const hasOtherMovements = instructorsState.movements.some(item => item.id !== movement.id && item.instructorId === instructor.id);
   if (movement.createdInstructor && !hasOtherMovements) {
     instructorsState.instructors = instructorsState.instructors.filter(item => item.id !== instructor.id);
+    if (movement.hierarchyBefore || movement.hierarchyAfter) {
+      restoreHierarchyPlacement(movement.instructorName, movement.hierarchyBefore);
+    }
     return;
   }
 
   if (movement.beforeState) {
     applyInstructorMovementState(instructor, movement.beforeState);
+    if (movement.hierarchyBefore || movement.hierarchyAfter) {
+      restoreHierarchyPlacement(movement.instructorName, movement.hierarchyBefore);
+    }
     return;
   }
 
@@ -1441,6 +2021,10 @@ function revertMovementEffect(movement) {
 
   if (movement.type === "rimozione") {
     instructor.active = true;
+  }
+
+  if (movement.hierarchyBefore || movement.hierarchyAfter) {
+    restoreHierarchyPlacement(movement.instructorName, movement.hierarchyBefore);
   }
 }
 
@@ -1910,6 +2494,10 @@ function buildInstructorId(name) {
   return `inst-${slugify(name)}-${Date.now().toString(36)}`;
 }
 
+function buildHierarchyMemberId(name, roleKey = "") {
+  return `hm-${slugify(roleKey || "ruolo")}-${slugify(name)}`;
+}
+
 function buildMovementId() {
   const nextSequence = toNonNegativeInt(instructorsState?.movementSequence) + 1;
   if (instructorsState) instructorsState.movementSequence = nextSequence;
@@ -1966,7 +2554,9 @@ function importInstructorsData(event) {
         archiveSequence: resolveArchiveSequence(parsed),
         cycleArchives: Array.isArray(parsed.cycleArchives)
           ? parsed.cycleArchives.map(normalizeCycleArchiveRecord).filter(Boolean)
-          : []
+          : [],
+        hierarchyUpdatedAt: parsed.hierarchyUpdatedAt || formatDateFilePart(new Date()),
+        hierarchyRoles: normalizeHierarchyRoles(parsed.hierarchyRoles)
       };
       selectedCycleArchiveId = instructorsState.cycleArchives[0]?.id || "";
       hydrateIstruttoriForm();
@@ -2272,6 +2862,7 @@ function startNewInstructorsCycle() {
 function saveInstructorsState() {
   const saved = setStorageItem(ISTRUTTORI_STORAGE_KEY, JSON.stringify(instructorsState));
   updateSaveStatus(istruttoriDom.saveStatus, saved);
+  updateSaveStatus(hierarchyDom.saveStatus, saved);
 }
 
 function resetInstructorsState() {

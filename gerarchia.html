@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerarchia Istruttori - Portale LSPD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app-body">
+  <a class="skip-link" href="#hierarchyBoard">Vai alla gerarchia</a>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand-link" href="index.html" aria-label="Torna alla home">
+        <span class="brand-mark">
+          <img src="assets/lspd-stemma.svg" alt="" />
+        </span>
+        <span class="brand-copy">
+          <strong>Gerarchia Istruttori</strong>
+          <small>Ruoli e struttura reparto</small>
+        </span>
+      </a>
+
+      <div class="topbar-actions">
+        <a class="ghost-link" href="colloquio.html">Colloquio</a>
+        <a class="ghost-link" href="formazione.html">Formazione</a>
+        <a class="ghost-link" href="istruttori.html">Reparto</a>
+        <a class="ghost-link" href="index.html">
+          <span aria-hidden="true">&larr;</span>
+          Home
+        </a>
+      </div>
+    </header>
+
+    <main class="main-grid hierarchy-main">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Struttura interna</p>
+            <h1>Gerarchia istruttori</h1>
+          </div>
+          <span class="panel-badge">Autosave</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="form-grid cols-2">
+            <label for="hierarchyUpdateDate">
+              Data modulo
+              <input type="date" id="hierarchyUpdateDate" />
+            </label>
+
+            <label for="hierarchyNewRole">
+              Ruolo
+              <select id="hierarchyNewRole"></select>
+            </label>
+
+            <label for="hierarchyNewName">
+              Nome persona
+              <input type="text" id="hierarchyNewName" placeholder="Nome da inserire" />
+            </label>
+
+            <label for="hierarchyNewNote">
+              Nota
+              <input type="text" id="hierarchyNewNote" placeholder="es. prova fino al giorno 19/05" />
+            </label>
+          </div>
+
+          <button id="addHierarchyMemberBtn" class="btn btn-primary" type="button">Aggiungi in gerarchia</button>
+        </div>
+      </section>
+
+      <aside class="panel sticky-panel" aria-label="Riepilogo gerarchia istruttori">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Riepilogo live</p>
+            <h2>Gerarchia</h2>
+          </div>
+          <span id="hierarchyRoleCount" class="panel-badge">0 ruoli</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span>Persone</span>
+              <strong id="hierarchyMemberCount">0</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Vuoti</span>
+              <strong id="hierarchyVacantCount">0</strong>
+            </div>
+
+            <div class="stat-card stat-wide">
+              <span>Ultimo update</span>
+              <strong id="hierarchyLastUpdateText">--/--/----</strong>
+            </div>
+          </div>
+
+          <div class="side-actions">
+            <button id="copyHierarchyBtn" class="btn btn-primary" type="button">Copia gerarchia</button>
+            <button id="downloadHierarchyBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+          </div>
+
+          <p id="hierarchySaveStatus" class="save-status" aria-live="polite">Pronto</p>
+        </div>
+      </aside>
+    </main>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Ruoli reparto</p>
+          <h2>Organigramma</h2>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div id="hierarchyBoard" class="hierarchy-board" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="panel report-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Modulo Discord</p>
+          <h2>Gerarchia copiabile</h2>
+        </div>
+        <span class="panel-badge">Auto-generato</span>
+      </div>
+
+      <div class="panel-body">
+        <div class="report-module">
+          <div class="report-toolbar">
+            <div class="report-meta" aria-label="Dettagli gerarchia">
+              <span>Formato Discord</span>
+              <span>Ruoli ufficiali</span>
+            </div>
+
+            <div class="report-inline-actions">
+              <button id="copyHierarchyInlineBtn" class="btn btn-primary" type="button">Copia gerarchia</button>
+              <button id="downloadHierarchyInlineBtn" class="btn btn-secondary" type="button">Scarica TXT</button>
+            </div>
+          </div>
+
+          <textarea id="hierarchyReport" class="summary-box summary-box-tall" readonly aria-label="Gerarchia istruttori generata"></textarea>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>

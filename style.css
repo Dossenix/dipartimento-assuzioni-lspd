@@ -685,6 +685,12 @@ a:focus-visible {
   filter: brightness(1.04);
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  filter: none;
+}
+
 .save-status {
   margin: 12px 0 0;
 }
@@ -891,6 +897,70 @@ a:focus-visible {
 .legacy-paste-panel .btn {
   justify-self: end;
   min-width: 220px;
+}
+
+.hierarchy-main .panel-body > .btn {
+  margin-top: 14px;
+}
+
+.hierarchy-board {
+  display: grid;
+  gap: 14px;
+}
+
+.hierarchy-role-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+}
+
+.hierarchy-role-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 14px;
+}
+
+.hierarchy-role-header h3 {
+  margin: 0;
+  font-size: 1.04rem;
+}
+
+.hierarchy-member-list {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.hierarchy-member-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.75fr) minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  border-radius: var(--radius);
+  background: var(--surface-3);
+  padding: 12px;
+}
+
+.hierarchy-member-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.hierarchy-member-actions .btn {
+  min-height: 44px;
+}
+
+.hierarchy-empty {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  padding: 12px;
 }
 
 .archive-empty {
@@ -1209,7 +1279,8 @@ a:focus-visible {
   .rules-grid,
   .home-grid,
   .movement-grid,
-  .instructor-row {
+  .instructor-row,
+  .hierarchy-member-row {
     grid-template-columns: 1fr;
   }
 
@@ -1241,6 +1312,11 @@ a:focus-visible {
 
   .legacy-import-actions {
     justify-content: flex-start;
+  }
+
+  .hierarchy-member-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .archive-chart-header {
@@ -1308,7 +1384,7 @@ a:focus-visible {
   .topbar-actions {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   }
 
   .side-actions {
@@ -1340,6 +1416,12 @@ a:focus-visible {
   .legacy-paste-panel .btn {
     width: 100%;
     min-width: 0;
+  }
+
+  .hierarchy-role-header,
+  .hierarchy-member-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .archive-chart-row {
