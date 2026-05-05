@@ -877,6 +877,12 @@ const istruttoriDom = {
   archiveChartTitle: document.getElementById("archiveChartTitle"),
   archiveChartMeta: document.getElementById("archiveChartMeta"),
   archiveChart: document.getElementById("cycleArchiveChart"),
+  importLegacyReportFileBtn: document.getElementById("importLegacyReportFileBtn"),
+  legacyReportFile: document.getElementById("legacyReportFile"),
+  toggleLegacyReportPasteBtn: document.getElementById("toggleLegacyReportPasteBtn"),
+  legacyReportPastePanel: document.getElementById("legacyReportPastePanel"),
+  legacyReportText: document.getElementById("legacyReportText"),
+  importLegacyReportTextBtn: document.getElementById("importLegacyReportTextBtn"),
   copyReportBtn: document.getElementById("copyInstructorsReportBtn"),
   copyReportInlineBtn: document.getElementById("copyInstructorsReportInlineBtn"),
   downloadReportBtn: document.getElementById("downloadInstructorsReportBtn"),
@@ -1002,6 +1008,7 @@ function normalizeCycleArchiveRecord(record, index = 0) {
     cycleLabel: record.cycleLabel || "Ciclo salvato",
     closedAt: record.closedAt || formatDateFilePart(new Date()),
     eventDate: record.eventDate || "",
+    source: record.source || "",
     totals: {
       trainings: toNonNegativeInt(totals.trainings),
       warnings: toNonNegativeInt(totals.warnings),
@@ -1024,7 +1031,8 @@ function normalizeArchiveInstructorRecord(record) {
     trainings,
     warnings,
     points: Number.isFinite(Number(record.points)) ? Number(record.points) : trainings - (warnings * 2),
-    active: record.active !== false
+    active: record.active !== false,
+    importedScore: Boolean(record.importedScore)
   };
 }
 
@@ -1080,6 +1088,13 @@ function attachIstruttoriListeners() {
   istruttoriDom.resetBtn?.addEventListener("click", resetInstructorsState);
   istruttoriDom.recentMovementsList?.addEventListener("click", handleRecentMovementClick);
   istruttoriDom.archiveTabs?.addEventListener("click", handleArchiveTabClick);
+  istruttoriDom.importLegacyReportFileBtn?.addEventListener("click", () => {
+    if (istruttoriDom.legacyReportFile) istruttoriDom.legacyReportFile.value = "";
+    istruttoriDom.legacyReportFile?.click();
+  });
+  istruttoriDom.legacyReportFile?.addEventListener("change", importLegacyReportFile);
+  istruttoriDom.toggleLegacyReportPasteBtn?.addEventListener("click", toggleLegacyReportPastePanel);
+  istruttoriDom.importLegacyReportTextBtn?.addEventListener("click", importLegacyReportFromTextarea);
 
   istruttoriDom.instructorsContainer?.addEventListener("input", handleInstructorRowInput);
   istruttoriDom.instructorsContainer?.addEventListener("change", handleInstructorRowInput);
@@ -1622,7 +1637,10 @@ function createArchiveChartRow(row, maxAbsPoints) {
   track.appendChild(bar);
 
   const points = createTextElement("span", "archive-points", `${row.points} pp`);
-  const detail = createTextElement("small", "", `${row.trainings} add. / ${row.warnings} amm.`);
+  const detailText = row.importedScore
+    ? "punteggio importato"
+    : `${row.trainings} add. / ${row.warnings} amm.`;
+  const detail = createTextElement("small", "", detailText);
 
   item.append(name, track, points, detail);
   return item;
@@ -1967,6 +1985,266 @@ function importInstructorsData(event) {
   reader.readAsText(file);
 }
 
+function importLegacyReportFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    importLegacyReportArchive(String(reader.result || ""), file.name);
+    event.target.value = "";
+  });
+  reader.addEventListener("error", () => {
+    showToast("Impossibile leggere il report.", "error");
+  });
+  reader.readAsText(file);
+}
+
+function toggleLegacyReportPastePanel() {
+  if (!istruttoriDom.legacyReportPastePanel) return;
+
+  const isOpening = istruttoriDom.legacyReportPastePanel.hidden;
+  istruttoriDom.legacyReportPastePanel.hidden = !isOpening;
+  setText(istruttoriDom.toggleLegacyReportPasteBtn, isOpening ? "Chiudi incolla" : "Incolla report");
+
+  if (isOpening) {
+    window.setTimeout(() => istruttoriDom.legacyReportText?.focus(), 40);
+  }
+}
+
+function importLegacyReportFromTextarea() {
+  const text = getValue(istruttoriDom.legacyReportText);
+  if (!text.trim()) {
+    showToast("Incolla un report prima di importarlo.", "error");
+    return;
+  }
+
+  importLegacyReportArchive(text, "report incollato");
+}
+
+function importLegacyReportArchive(text, sourceName = "report") {
+  try {
+    const archive = parseLegacyInstructorsReport(text, sourceName);
+    const exists = (instructorsState.cycleArchives || []).some(item => {
+      return item.cycleLabel === archive.cycleLabel && item.eventDate === archive.eventDate;
+    });
+
+    if (exists && !confirm("Esiste gia un ciclo con stessa data/report. Vuoi importarlo comunque?")) {
+      return;
+    }
+
+    archive.id = buildArchiveId();
+    const normalizedArchive = normalizeCycleArchiveRecord(archive);
+    instructorsState.cycleArchives = [normalizedArchive, ...(instructorsState.cycleArchives || [])].slice(0, MAX_CYCLE_ARCHIVES);
+    selectedCycleArchiveId = normalizedArchive.id;
+
+    updateIstruttoriEverything();
+    saveInstructorsState();
+
+    if (istruttoriDom.legacyReportText) istruttoriDom.legacyReportText.value = "";
+    if (istruttoriDom.legacyReportPastePanel) istruttoriDom.legacyReportPastePanel.hidden = true;
+    setText(istruttoriDom.toggleLegacyReportPasteBtn, "Incolla report");
+    showToast(`Report importato nello storico: ${normalizedArchive.cycleLabel}.`, "success");
+  } catch (error) {
+    console.error("Errore import report storico:", error);
+    showToast(error.message || "Report non riconosciuto.", "error");
+  }
+}
+
+function parseLegacyInstructorsReport(text, sourceName = "report") {
+  const cleaned = normalizeLegacyReportText(text);
+  if (!cleaned.trim()) throw new Error("Report vuoto.");
+
+  const lines = cleaned.split("\n");
+  const instructors = extractLegacyReportInstructors(lines);
+  if (!instructors.length) {
+    throw new Error("Non ho trovato la lista istruttori con punteggi nel report.");
+  }
+
+  const eventDate = extractLegacyReportEventDate(cleaned);
+  const cycleLabel = extractLegacyReportCycleLabel(cleaned, eventDate);
+  const closedAt = inferLegacyReportClosedAt(cycleLabel, eventDate);
+  const inactiveNames = extractLegacyReportInactiveNames(cleaned);
+  const explicitTrainings = extractLegacyReportMetric(cleaned, [
+    /Addestramenti svolti\s*:?\s*(-?\d+)/i
+  ]);
+  const explicitWarnings = extractLegacyReportMetric(cleaned, [
+    /Ammonimenti assegnati\s*:?\s*(-?\d+)/i
+  ]);
+  const explicitMovements = extractLegacyReportMetric(cleaned, [
+    /Movimenti\s*:?\s*(-?\d+)/i,
+    /(\d+)\s+movimenti/i
+  ]);
+
+  return {
+    id: "",
+    cycleLabel,
+    closedAt,
+    eventDate,
+    source: "legacy-report",
+    sourceName,
+    totals: {
+      trainings: explicitTrainings ?? instructors.reduce((total, instructor) => total + Math.max(0, instructor.points), 0),
+      warnings: explicitWarnings ?? 0,
+      active: instructors.filter(instructor => instructor.active).length,
+      inactive: inactiveNames.length || instructors.filter(instructor => instructor.points === 0).length,
+      movements: explicitMovements ?? 0
+    },
+    instructors
+  };
+}
+
+function normalizeLegacyReportText(text) {
+  return String(text || "")
+    .replace(/\uFEFF/g, "")
+    .replace(/[\u200B-\u200D]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+}
+
+function extractLegacyReportInstructors(lines) {
+  const instructors = [];
+  let inList = false;
+
+  lines.forEach(rawLine => {
+    const line = rawLine.trim();
+
+    if (/lista\s+agenti\s+istruttori/i.test(line)) {
+      inList = true;
+      return;
+    }
+
+    if (!inList) return;
+    if ((/^\*\*/.test(line) || /^#/.test(line)) && instructors.length) {
+      inList = false;
+      return;
+    }
+
+    const instructor = parseLegacyInstructorScoreLine(line);
+    if (instructor) instructors.push(instructor);
+  });
+
+  return dedupeLegacyInstructors(instructors);
+}
+
+function parseLegacyInstructorScoreLine(line) {
+  const body = line
+    .replace(/^>\s*/, "")
+    .replace(/^[-*•]\s*/, "")
+    .trim();
+
+  if (!body || /nessun istruttore/i.test(body)) return null;
+
+  const active = !body.includes("~~");
+  const clean = body
+    .replace(/~~/g, "")
+    .replace(/[`*_]/g, "")
+    .trim();
+  const match = clean.match(/^(.+?)\s*[-–—]\s*(-?\d+)\s*p{1,2}\b/i);
+  if (!match) return null;
+
+  const name = match[1].trim();
+  if (!name || name.includes(":")) return null;
+
+  const points = Number.parseInt(match[2], 10);
+  if (!Number.isFinite(points)) return null;
+
+  return {
+    name,
+    trainings: Math.max(0, points),
+    warnings: 0,
+    points,
+    active,
+    importedScore: true
+  };
+}
+
+function dedupeLegacyInstructors(instructors) {
+  const seen = new Set();
+  return instructors.filter(instructor => {
+    const key = instructor.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function extractLegacyReportEventDate(text) {
+  const match = text.match(/ANNUNCIAT[OA]\s+IL\s+GIORNO\s+(\d{1,2}\/\d{1,2}\/\d{2,4})/i);
+  return match ? parseITDateToInput(match[1]) : "";
+}
+
+function extractLegacyReportCycleLabel(text, eventDate) {
+  const directMatch = text.match(/ciclo\s*:?\s*(\d{1,2}\/\d{1,2})\s*[-–—]\s*(\d{1,2}\/\d{1,2})/i);
+  if (directMatch) return normalizeLegacyCycleRange(directMatch[1], directMatch[2]);
+
+  const ranges = [...text.matchAll(/(\d{1,2}\/\d{1,2})\s*[-–—]\s*(\d{1,2}\/\d{1,2})/g)]
+    .map(match => ({ start: match[1], end: match[2] }));
+
+  if (ranges.length) {
+    return normalizeLegacyCycleRange(ranges[0].start, ranges[ranges.length - 1].end);
+  }
+
+  return eventDate ? `Report ${formatInputDateToIT(eventDate)}` : "Report importato";
+}
+
+function normalizeLegacyCycleRange(start, end) {
+  return `${normalizeLegacyShortDate(start)} - ${normalizeLegacyShortDate(end)}`;
+}
+
+function normalizeLegacyShortDate(value) {
+  const [dd, mm] = String(value || "").split("/");
+  return `${String(dd || "").padStart(2, "0")}/${String(mm || "").padStart(2, "0")}`;
+}
+
+function inferLegacyReportClosedAt(cycleLabel, eventDate) {
+  const match = String(cycleLabel || "").match(/(\d{1,2})\/(\d{1,2})\s*-\s*(\d{1,2})\/(\d{1,2})/);
+  if (!match) return eventDate || formatDateFilePart(new Date());
+
+  const startMonth = Number.parseInt(match[2], 10);
+  const endDay = match[3];
+  const endMonth = Number.parseInt(match[4], 10);
+  let year = eventDate ? Number.parseInt(eventDate.split("-")[0], 10) : new Date().getFullYear();
+  if (Number.isFinite(startMonth) && Number.isFinite(endMonth) && endMonth < startMonth) year += 1;
+
+  return parseITDateToInput(`${endDay}/${endMonth}/${year}`) || eventDate || formatDateFilePart(new Date());
+}
+
+function extractLegacyReportInactiveNames(text) {
+  const names = [];
+  const inlineMatch = text.match(/Inattivi ciclo(?: 2 settimane)?\s*:?\s*([^\n]+)/i);
+  if (inlineMatch) names.push(...parseLegacyNameList(inlineMatch[1]));
+
+  const sectionPatterns = [
+    /\*\*Inattivit[^\n]*:\*\*\s*\n\s*>\s*([^\n]+)/gi,
+    /\*\*Persone che non hanno svolto[^\n]*:\*\*\s*\n\s*>\s*([^\n]+)/gi
+  ];
+
+  sectionPatterns.forEach(pattern => {
+    [...text.matchAll(pattern)].forEach(match => {
+      names.push(...parseLegacyNameList(match[1]));
+    });
+  });
+
+  return [...new Set(names.map(name => name.toLowerCase()))];
+}
+
+function parseLegacyNameList(value) {
+  return String(value || "")
+    .split(",")
+    .map(name => name.replace(/^>\s*/, "").replace(/~~/g, "").trim())
+    .filter(name => name && name !== "\\" && !/^nessun/i.test(name));
+}
+
+function extractLegacyReportMetric(text, patterns) {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return toNonNegativeInt(match[1]);
+  }
+
+  return null;
+}
+
 function startNewInstructorsCycle() {
   const confirmReset = confirm("Vuoi iniziare un nuovo ciclo da 2 settimane? Il ciclo attuale verrà salvato nello storico grafici, poi verranno azzerati addestramenti, ammonimenti e movimenti.");
   if (!confirmReset) return;
@@ -2296,6 +2574,29 @@ function formatInputDateToIT(value) {
   const [yyyy, mm, dd] = value.split("-");
   if (!yyyy || !mm || !dd) return value;
   return `${dd}/${mm}/${yyyy}`;
+}
+
+function parseITDateToInput(value, fallbackYear = "") {
+  const match = String(value || "").trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if (!match) return "";
+
+  const dd = match[1].padStart(2, "0");
+  const mm = match[2].padStart(2, "0");
+  let yyyy = match[3] || fallbackYear;
+  if (!yyyy) return "";
+  if (String(yyyy).length === 2) yyyy = `20${yyyy}`;
+
+  const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  if (
+    Number.isNaN(date.getTime())
+    || date.getFullYear() !== Number(yyyy)
+    || date.getMonth() !== Number(mm) - 1
+    || date.getDate() !== Number(dd)
+  ) {
+    return "";
+  }
+
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function formatDiscordMention(value, placeholder) {

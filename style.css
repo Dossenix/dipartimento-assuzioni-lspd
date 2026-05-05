@@ -844,6 +844,55 @@ a:focus-visible {
   min-height: 520px;
 }
 
+.legacy-import-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 14px;
+}
+
+.legacy-import-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.legacy-import-main h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.legacy-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.legacy-import-actions .btn {
+  min-height: 40px;
+}
+
+.legacy-paste-panel {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.legacy-paste-panel textarea {
+  min-height: 180px;
+  resize: vertical;
+}
+
+.legacy-paste-panel .btn {
+  justify-self: end;
+  min-width: 220px;
+}
+
 .archive-empty {
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
@@ -1185,6 +1234,15 @@ a:focus-visible {
     flex: 1 1 180px;
   }
 
+  .legacy-import-main {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .legacy-import-actions {
+    justify-content: flex-start;
+  }
+
   .archive-chart-header {
     flex-direction: column;
   }
@@ -1272,6 +1330,16 @@ a:focus-visible {
   .report-inline-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .legacy-import-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .legacy-paste-panel .btn {
+    width: 100%;
+    min-width: 0;
   }
 
   .archive-chart-row {

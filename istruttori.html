@@ -200,6 +200,31 @@
       </div>
 
       <div class="panel-body">
+        <div class="legacy-import-card">
+          <div class="legacy-import-main">
+            <div>
+              <p class="eyebrow">Import storico</p>
+              <h3>Vecchio report Discord</h3>
+            </div>
+
+            <div class="legacy-import-actions">
+              <button id="importLegacyReportFileBtn" class="btn btn-secondary" type="button">Carica TXT/MD</button>
+              <button id="toggleLegacyReportPasteBtn" class="btn btn-secondary" type="button">Incolla report</button>
+            </div>
+          </div>
+
+          <input id="legacyReportFile" class="visually-hidden" type="file" accept="text/plain,.txt,.md" />
+
+          <div id="legacyReportPastePanel" class="legacy-paste-panel" hidden>
+            <label for="legacyReportText">
+              Report da importare
+              <textarea id="legacyReportText" placeholder="Incolla qui il vecchio report..."></textarea>
+            </label>
+
+            <button id="importLegacyReportTextBtn" class="btn btn-primary" type="button">Importa nello storico</button>
+          </div>
+        </div>
+
         <div id="cycleArchiveEmpty" class="archive-empty">
           <p>Nessun reset salvato. Quando avvii un nuovo ciclo da 2 settimane, quello appena chiuso comparirà qui con il suo grafico.</p>
         </div>
